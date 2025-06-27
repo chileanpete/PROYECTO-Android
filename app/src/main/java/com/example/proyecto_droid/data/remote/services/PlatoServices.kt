@@ -10,5 +10,5 @@ interface PlatoServices {
     suspend fun getPlatos(): List<Plato>
 
     @POST("api/platos")
-    suspend fun addPlato(@Body tarea: Plato): Plato
+    suspend fun addPlato(@Body plato: Plato): Plato
 }
