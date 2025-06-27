@@ -43,16 +43,21 @@ private val platoServices: PlatoServices
         getPlatos()
     }
 
-//    fun addPlato(nombre: String, descripcion: String) {
-//        viewModelScope.launch {
-//            tareasUiState = TareasUiState.Loading
-//            try {
-//                tareaService.addTarea(Tarea(0,nombre,descripcion)) // Supón que tienes este método
-//                val updatedList = tareaService.getTareas()
-//                tareasUiState = TareasUiState.Success(updatedList)
-//            } catch (e: Exception) {
-//                tareasUiState = TareasUiState.Error(e.message ?: "Error al agregar tarea")
-//            }
-//        }
-//    }
+    fun addPlato(idLugar:Int,idCategoria:Int,nombrePlato:String,descripcionPlato: String, precioPlato: Double, caloriasPlato: Int, protePlato:Double,
+                  carbPlato: Double, grasaPlato: Double, fibraPlato: Double, azucarPlato: Double, sodioPlato: Double,
+                  disponibilidadPlato: Boolean, esVegetariano: Boolean, esVegano: Boolean, sinGluten: Boolean,
+                  imagenUrl: String) {
+        viewModelScope.launch {
+            platosUiState = PlatosUiState.Loading
+            try {
+                platoServices.addPlato(Plato(0,idLugar,idCategoria,nombrePlato,descripcionPlato,precioPlato,
+                    caloriasPlato,protePlato,carbPlato,grasaPlato,fibraPlato,azucarPlato,sodioPlato,disponibilidadPlato,
+                    esVegetariano,esVegano,sinGluten,imagenUrl))
+                val updatedList = platoServices.getPlatos()
+                platosUiState = PlatosUiState.Success(updatedList)
+            } catch (e: Exception) {
+                platosUiState = PlatosUiState.Error(e.message ?: "Error al agregar plato")
+            }
+        }
+    }
 }
