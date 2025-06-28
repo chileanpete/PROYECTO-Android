@@ -7,9 +7,16 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.proyecto_droid.Proyecto_droid
 import com.example.proyecto_droid.ui.screens.platos.PlatosViewModel
 import com.example.proyecto_droid.ui.screens.auth.AuthViewModel
+import com.example.proyecto_droid.ui.screens.lugares.LugaresViewModel
 
 object AppViewModelProvider {
     val Factory = viewModelFactory {
+        initializer {
+            LugaresViewModel(
+                lugarService= App().container.lugarApiService
+
+            )
+        }
         initializer {
             PlatosViewModel(
                 platoServices= App().container.platoApiService
