@@ -65,6 +65,7 @@ fun AppNavHost(navController: NavHostController) {
         composable("login") { LoginScreen(navController) }
         composable("register") { RegisterScreen(navController) }
         composable("forgot") { ForgotPasswordScreen(navController) }
+        composable("main") { MainAppScreen(navController) }
     }
 }
 
@@ -79,7 +80,7 @@ fun LoginScreen(navController: NavHostController) {
     val context = LocalContext.current
 
     fun validate(): Boolean {
-        return email.isNotBlank() && password.length >= 6
+        return email == "usuario@ucsc.cl" && password == "usuario123"
     }
 
     BoxWithConstraints(
@@ -177,14 +178,16 @@ fun LoginScreen(navController: NavHostController) {
                     loading = true
                     error = null
                     if (!validate()) {
-                        error = "Completa los campos correctamente."
+                        error = "Credenciales incorrectas. Usa: usuario@ucsc.cl / usuario123"
                         loading = false
                     } else {
                         coroutineScope.launch {
                             delay(1500)
                             loading = false
-                            Toast.makeText(context, "¡Login exitoso! (simulado)", Toast.LENGTH_SHORT).show()
-                            // Aquí puedes navegar a la pantalla principal real
+                            Toast.makeText(context, "¡Login exitoso!", Toast.LENGTH_SHORT).show()
+                            navController.navigate("main") {
+                                popUpTo("login") { inclusive = true }
+                            }
                         }
                     }
                 },
@@ -460,6 +463,50 @@ fun SocialIconButton(iconRes: Int, contentDescription: String, onClick: () -> Un
                 tint = Color.Unspecified,
                 modifier = Modifier.size(28.dp)
             )
+        }
+    }
+}
+
+@Composable
+fun MainAppScreen(navController: NavHostController) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundLight),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Text(
+                text = "Vida Sana UCSC",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = GreenPrimary,
+                    fontSize = 32.sp
+                ),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            Text(
+                text = "¡Bienvenido a tu app de vida saludable!",
+                color = LightGrayText,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+            Button(
+                onClick = {
+                    navController.navigate("login") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+            ) {
+                Text("Cerrar Sesión", color = Color.White, fontSize = 18.sp)
+            }
         }
     }
 }
