@@ -1,6 +1,6 @@
 package com.example.proyecto_droid
 
-import android.os.Bundle
+import  android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -32,6 +32,8 @@ import androidx.compose.runtime.LaunchedEffect
 import kotlinx.coroutines.delay
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.proyecto_droid.ui.Navigation
 import com.example.proyecto_droid.ui.theme.Proyecto_droidTheme
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
