@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.proyecto_droid.ui.screens.auth.LoginScreen
 import com.example.proyecto_droid.ui.screens.platos.AddPlatoScreen
 import com.example.proyecto_droid.ui.screens.platos.PlatosScreen
+import com.example.proyecto_droid.ui.screens.desafios.DesafiosScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -20,6 +21,9 @@ object AddPlato
 
 @Serializable
 object AuthManager
+
+@Serializable
+object Desafios
 
 @Composable
 fun Navigation(){
@@ -38,5 +42,9 @@ fun Navigation(){
         composable<AddPlato> {
             AddPlatoScreen(navController = navController)
         }
+        composable<Desafios> {
+            DesafiosScreen(navController = navController)
+        }
+
     }
 }

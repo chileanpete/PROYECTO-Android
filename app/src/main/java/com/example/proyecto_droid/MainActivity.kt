@@ -42,6 +42,8 @@ import androidx.navigation.compose.rememberNavController
 import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.BoxWithConstraints
+import com.example.proyecto_droid.ui.screens.desafios.DesafiosScreen
+import com.example.proyecto_droid.util.Constants
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,6 +70,7 @@ fun AppNavHost(navController: NavHostController) {
         composable("register") { RegisterScreen(navController) }
         composable("forgot") { ForgotPasswordScreen(navController) }
         composable("main") { MainAppScreen(navController) }
+        composable("desafios") { DesafiosScreen(navController) }
     }
 }
 
@@ -495,6 +498,21 @@ fun MainAppScreen(navController: NavHostController) {
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(bottom = 32.dp)
             )
+
+            // 🔽 Botón para ir a Desafíos
+            Button(
+                onClick = { navController.navigate("desafios") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .padding(bottom = 16.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+            ) {
+                Text("Ver desafíos sugeridos", color = Color.White, fontSize = 18.sp)
+            }
+
+            // Botón de cerrar sesión
             Button(
                 onClick = {
                     navController.navigate("login") {
@@ -512,3 +530,4 @@ fun MainAppScreen(navController: NavHostController) {
         }
     }
 }
+

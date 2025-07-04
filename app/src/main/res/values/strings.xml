@@ -1,3 +1,13 @@
 <resources>
     <string name="app_name">Vida Sana UCSC</string>
+
+    <!-- Textos de la pantalla de desafíos -->
+    <string name="titulo_objetivo">¿Cuál es tu objetivo?</string>
+    <string name="subtitulo_objetivo">Selecciona uno o más para sugerirte desafíos</string>
+    <string name="aceptar">Aceptar</string>
+    <string name="desafios_sugeridos">Desafíos sugeridos</string>
+    <string name="sin_desafios">No hay desafíos para los objetivos seleccionados.</string>
+    <string name="probar">Probar</string>
+    <string name="volver">Volver</string>
+    <string name="error_cargando_desafios">Error cargando desafíos</string>
 </resources>

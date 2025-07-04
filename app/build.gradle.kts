@@ -41,6 +41,7 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.navigation.runtime.android)
     val navVersion = "2.8.9"
     val roomVersion = "2.6.0"
 
@@ -61,6 +62,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
 
     //Api Rest
     implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:1.0.0")
