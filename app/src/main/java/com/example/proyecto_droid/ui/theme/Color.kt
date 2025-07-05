@@ -13,3 +13,5 @@ val Pink40 = Color(0xFF7D5260)
 val GreenPrimary = Color(0xFF4CAF50)
 val LightGrayText = Color(0xFFB0B0B0)
 val BackgroundLight = Color(0xFFF8F8F8)
+
+val BlueGradient = Color(0xFF6EC6FF) // Azul suave para gradiente
