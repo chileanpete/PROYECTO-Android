@@ -12,58 +12,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.proyecto_droid.model.Desafio
+import com.example.proyecto_droid.model.TipoDesafio
+import com.example.proyecto_droid.ui.screens.desafios.components.DesafioCard
 import com.example.proyecto_droid.ui.theme.BackgroundLight
 import com.example.proyecto_droid.ui.theme.GreenPrimary
-import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.GET
-import com.example.proyecto_droid.util.Constants
-
-
-// --- Retrofit API ---
-
-interface ApiService {
-    @GET("desafios")  // Asegúrate que esta ruta sea correcta en tu backend
-    suspend fun getDesafios(): List<DesafioApiModel>
-}
-
-// Modelo para recibir JSON (usa los nombres tal cual están en la API)
-data class DesafioApiModel(
-    val id: Int,
-    val titulo: String,
-    val descripcion: String,
-    val tipo_desafio: String,
-    val objetivos_relacionados: List<String> // Debe ser un array JSON en la API
-)
-
-// Data class usada en UI con enum
-data class Desafio(
-    val id: Int,
-    val titulo: String,
-    val descripcion: String,
-    val tipo: TipoDesafio,
-    val objetivosRelacionados: List<String>
-)
-
-enum class TipoDesafio {
-    DIARIO, SEMANAL
-}
-
-val retrofit = Retrofit.Builder()
-    .baseUrl("${Constants.BASE_URL}/api/")
-    .addConverterFactory(GsonConverterFactory.create())
-    .build()
-
-val apiService = retrofit.create(ApiService::class.java)
-
-
-// --- Composable ---
+import com.example.proyecto_droid.viewmodel.DesafiosViewModel
 
 @Composable
-fun DesafiosScreen(navController: NavHostController) {
-    val scope = rememberCoroutineScope()
+fun DesafiosScreen(navController: NavHostController, viewModel: DesafiosViewModel = viewModel()) {
+    val mostrarDialogo = remember { mutableStateOf(true) }
+    val seleccionados = remember { mutableStateListOf<String>() }
+
+    val desafios by viewModel.desafios.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMsg by viewModel.error.collectAsState()
 
     val objetivosDisponibles = listOf(
         "Mejorar salud cardiovascular",
@@ -73,43 +38,9 @@ fun DesafiosScreen(navController: NavHostController) {
         "Reducir estrés"
     )
 
-    var mostrarDialogo by remember { mutableStateOf(true) }
-    val seleccionados = remember { mutableStateListOf<String>() }
-
-    var desafios by remember { mutableStateOf<List<Desafio>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(false) }
-    var errorMsg by remember { mutableStateOf<String?>(null) }
-
-    fun cargarDesafios() {
-        isLoading = true
-        errorMsg = null
-        scope.launch {
-            try {
-                val response = apiService.getDesafios()
-                desafios = response.map {
-                    Desafio(
-                        id = it.id,
-                        titulo = it.titulo,
-                        descripcion = it.descripcion,
-                        tipo = when (it.tipo_desafio.lowercase()) {
-                            "diario" -> TipoDesafio.DIARIO
-                            "semanal" -> TipoDesafio.SEMANAL
-                            else -> TipoDesafio.DIARIO
-                        },
-                        objetivosRelacionados = it.objetivos_relacionados
-                    )
-                }
-            } catch (e: Exception) {
-                errorMsg = "Error cargando desafíos: ${e.localizedMessage}"
-            } finally {
-                isLoading = false
-            }
-        }
-    }
-
-    LaunchedEffect(mostrarDialogo) {
-        if (!mostrarDialogo) {
-            cargarDesafios()
+    LaunchedEffect(mostrarDialogo.value) {
+        if (!mostrarDialogo.value) {
+            viewModel.cargarDesafios()
         }
     }
 
@@ -120,7 +51,7 @@ fun DesafiosScreen(navController: NavHostController) {
     val desafiosDiarios = desafiosFiltrados.filter { it.tipo == TipoDesafio.DIARIO }
     val desafiosSemanales = desafiosFiltrados.filter { it.tipo == TipoDesafio.SEMANAL }
 
-    if (mostrarDialogo) {
+    if (mostrarDialogo.value) {
         AlertDialog(
             onDismissRequest = {},
             modifier = Modifier.padding(16.dp),
@@ -176,7 +107,7 @@ fun DesafiosScreen(navController: NavHostController) {
             },
             confirmButton = {
                 Button(
-                    onClick = { if (seleccionados.isNotEmpty()) mostrarDialogo = false },
+                    onClick = { if (seleccionados.isNotEmpty()) mostrarDialogo.value = false },
                     enabled = seleccionados.isNotEmpty(),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
@@ -190,7 +121,7 @@ fun DesafiosScreen(navController: NavHostController) {
         )
     }
 
-    if (!mostrarDialogo) {
+    if (!mostrarDialogo.value) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -270,30 +201,3 @@ fun DesafiosScreen(navController: NavHostController) {
         }
     }
 }
-
-// Card para mostrar un desafío (lo separé para limpiar el código)
-@Composable
-fun DesafioCard(desafio: Desafio) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp),
-        colors = CardDefaults.cardColors(containerColor = GreenPrimary.copy(alpha = 0.1f))
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(desafio.titulo, style = MaterialTheme.typography.titleMedium)
-            Text(desafio.descripcion, style = MaterialTheme.typography.bodyMedium)
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(
-                onClick = {
-                    // Acción al "Probar" desafío
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Probar", color = Color.White)
-            }
-        }
-    }
-}
-

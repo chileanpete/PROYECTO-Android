@@ -4,10 +4,10 @@ data class DesafioSugeridoResponse(
     val usuario_id: Int,
     val imc: Double,
     val objetivo: String,
-    val desafios_sugeridos: List<Desafio>
+    val desafios_sugeridos: List<DesafioSugeridoDto>
 )
 
-data class Desafio(
+data class DesafioSugeridoDto(
     val id_desafio: Int,
     val titulo: String,
     val descripcion: String,
