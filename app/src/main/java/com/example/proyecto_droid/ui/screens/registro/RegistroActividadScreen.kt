@@ -18,17 +18,22 @@ import com.example.proyecto_droid.model.RegistroActividad
 import com.example.proyecto_droid.model.TipoEjercicio
 import com.example.proyecto_droid.ui.theme.BackgroundLight
 import com.example.proyecto_droid.ui.theme.GreenPrimary
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_droid.viewmodel.RegistroActividadViewModel
+import com.example.proyecto_droid.viewmodel.RegistroActividadUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistroActividadScreen(
     modifier: Modifier = Modifier
 ) {
+    val viewModel: RegistroActividadViewModel = viewModel()
+    val uiState by viewModel.uiState.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
+    val saveError by viewModel.saveError.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
-    var selectedTipoEjercicio by remember { mutableStateOf<TipoEjercicio?>(null) }
-    
-    // Simular datos para demostración
-    val registros = remember { mutableStateListOf<RegistroActividad>() }
+
+    // TODO: Cargar tipos de ejercicio reales si tienes endpoint, aquí simulado
     val tiposEjercicio = remember { 
         mutableStateListOf(
             TipoEjercicio(
@@ -54,7 +59,7 @@ fun RegistroActividadScreen(
             )
         )
     }
-    
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -98,7 +103,8 @@ fun RegistroActividadScreen(
             colors = ButtonDefaults.buttonColors(
                 containerColor = GreenPrimary
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isSaving
         ) {
             Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
@@ -107,16 +113,50 @@ fun RegistroActividadScreen(
         
         Spacer(modifier = Modifier.height(16.dp))
         
+        // Mostrar error de guardado si existe
+        if (saveError != null) {
+            Snackbar(
+                modifier = Modifier.padding(8.dp),
+                action = {
+                    TextButton(onClick = { /* Podrías limpiar el error aquí si lo deseas */ }) {
+                        Text("Cerrar")
+                    }
+                }
+            ) { Text(saveError ?: "") }
+        }
+
         // Lista de registros
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(registros) { registro ->
-                RegistroActividadCard(
-                    registro = registro,
-                    onEdit = { /* TODO: Implementar edición */ },
-                    onDelete = { registros.remove(registro) }
-                )
+        when (uiState) {
+            is RegistroActividadUiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = GreenPrimary)
+                }
+            }
+            is RegistroActividadUiState.Error -> {
+                val message = (uiState as RegistroActividadUiState.Error).message
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Error: $message", color = MaterialTheme.colorScheme.error)
+                }
+            }
+            is RegistroActividadUiState.Success -> {
+                val registros = (uiState as RegistroActividadUiState.Success).registros
+                if (registros.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No hay registros de actividad física.")
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(registros) { registro ->
+                            RegistroActividadCard(
+                                registro = registro,
+                                onEdit = { /* TODO: Implementar edición */ },
+                                onDelete = { /* TODO: Implementar eliminación real */ }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -127,24 +167,23 @@ fun RegistroActividadScreen(
             tiposEjercicio = tiposEjercicio,
             onDismiss = { showAddDialog = false },
             onConfirm = { tipoEjercicio, duracion, intensidad, comentario ->
-                val nuevoRegistro = RegistroActividad(
-                    idActividad = registros.size + 1,
-                    idUsuario = 1,
-                    idRutina = null,
+                // Fecha y hora actuales (puedes usar una librería para obtenerlas en producción)
+                val fecha = "2024-01-15"
+                val horaInicio = "07:00"
+                val horaFin = "08:00"
+                val caloriasQuemadas = duracion * 5 // Simulación
+                viewModel.crearRegistroActividad(
                     idTipoEjercicio = tipoEjercicio.idTipoEjercicio,
-                    fechaActividad = "2024-01-15",
-                    horaInicio = "07:00",
-                    horaFin = "07:00",
-                    duracionMinutos = duracion,
-                    caloriasQuemadas = duracion * 5, // Simulación
+                    idRutina = null,
+                    fecha = fecha,
+                    horaInicio = horaInicio,
+                    horaFin = horaFin,
+                    duracion = duracion,
+                    caloriasQuemadas = caloriasQuemadas,
                     intensidad = intensidad ?: tipoEjercicio.intensidadRecomendada,
                     comentario = comentario,
-                    puntosObtenidos = 15,
-                    completada = true,
-                    tipoEjercicio = tipoEjercicio,
-                    rutinaEjercicio = null
+                    completada = true
                 )
-                registros.add(nuevoRegistro)
                 showAddDialog = false
             }
         )
