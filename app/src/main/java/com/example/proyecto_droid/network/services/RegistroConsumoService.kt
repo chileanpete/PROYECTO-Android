@@ -58,7 +58,8 @@ data class CrearRegistroConsumoRequest(
     val hora_consumo: String,
     val porciones: Double,
     val valoracion: Int? = null,
-    val comentario: String? = null
+    val comentario: String? = null,
+    val calorias_totales: Int? = null
 )
 
 data class ActualizarRegistroConsumoRequest(

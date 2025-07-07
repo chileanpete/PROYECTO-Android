@@ -1,5 +1,6 @@
 package com.example.proyecto_droid.ui.screens.registro
 
+import android.app.Application
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,29 +13,43 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_droid.model.RegistroConsumo
 import com.example.proyecto_droid.model.Plato
-import com.example.proyecto_droid.network.services.CrearRegistroConsumoRequest
-import com.example.proyecto_droid.network.services.ActualizarRegistroConsumoRequest
-import com.example.proyecto_droid.network.services.EstadisticasConsumo
-import com.example.proyecto_droid.network.services.EstadisticasPeriodo
 import com.example.proyecto_droid.ui.theme.BackgroundLight
 import com.example.proyecto_droid.ui.theme.GreenPrimary
+import com.example.proyecto_droid.viewmodel.RegistroConsumoViewModel
+import com.example.proyecto_droid.viewmodel.RegistroConsumoUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistroConsumoScreen(
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val viewModel: RegistroConsumoViewModel = viewModel(
+        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return RegistroConsumoViewModel(context.applicationContext as Application) as T
+            }
+        }
+    )
+
+    val uiState by viewModel.uiState.collectAsState()
+    val isSaving by viewModel.isSaving.collectAsState()
+    val saveError by viewModel.saveError.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
-    var selectedPlato by remember { mutableStateOf<Plato?>(null) }
-    
-    // Simular datos para demostración
-    val registros = remember { mutableStateListOf<RegistroConsumo>() }
-    val platos = remember { 
-        mutableStateListOf(
+    var platos by remember { mutableStateOf<List<Plato>>(emptyList()) }
+    var showSnackBar by remember { mutableStateOf(false) }
+    var snackBarMessage by remember { mutableStateOf("") }
+
+    // Simulación: podrías cargar los platos desde la API si lo deseas
+    LaunchedEffect(Unit) {
+        platos = listOf(
             Plato(
                 idPlato = 1,
                 nombre = "Ensalada César",
@@ -69,7 +84,18 @@ fun RegistroConsumoScreen(
             )
         )
     }
-    
+
+    if (showSnackBar) {
+        Snackbar(
+            modifier = Modifier.padding(16.dp),
+            action = {
+                TextButton(onClick = { showSnackBar = false }) {
+                    Text("Cerrar")
+                }
+            }
+        ) { Text(snackBarMessage) }
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -113,7 +139,8 @@ fun RegistroConsumoScreen(
             colors = ButtonDefaults.buttonColors(
                 containerColor = GreenPrimary
             ),
-            shape = RoundedCornerShape(12.dp)
+            shape = RoundedCornerShape(12.dp),
+            enabled = !isSaving
         ) {
             Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
@@ -123,15 +150,37 @@ fun RegistroConsumoScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         // Lista de registros
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            items(registros) { registro ->
-                RegistroConsumoCard(
-                    registro = registro,
-                    onEdit = { /* TODO: Implementar edición */ },
-                    onDelete = { registros.remove(registro) }
-                )
+        when (uiState) {
+            is RegistroConsumoUiState.Loading -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = GreenPrimary)
+                }
+            }
+            is RegistroConsumoUiState.Error -> {
+                val message = (uiState as RegistroConsumoUiState.Error).message
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Error: $message", color = MaterialTheme.colorScheme.error)
+                }
+            }
+            is RegistroConsumoUiState.Success -> {
+                val registros = (uiState as RegistroConsumoUiState.Success).registros
+                if (registros.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No hay registros de alimentación.")
+                    }
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(registros) { registro ->
+                            RegistroConsumoCard(
+                                registro = registro,
+                                onEdit = { /* TODO: Implementar edición */ },
+                                onDelete = { /* TODO: Implementar eliminación real */ }
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -142,23 +191,38 @@ fun RegistroConsumoScreen(
             platos = platos,
             onDismiss = { showAddDialog = false },
             onConfirm = { plato, porciones, valoracion, comentario ->
-                val nuevoRegistro = RegistroConsumo(
-                    idConsumo = registros.size + 1,
-                    idUsuario = 1,
-                    idPlato = plato.idPlato,
-                    fechaConsumo = "2024-01-15",
-                    horaConsumo = "12:30",
+                // Fecha y hora actuales (puedes usar una librería para obtenerlas en producción)
+                val fecha = "2024-01-15"
+                val hora = "12:30"
+                viewModel.crearRegistroConsumo(
+                    plato = plato,
                     porciones = porciones,
-                    caloriasTotales = (plato.caloriasPorPorcion * porciones).toInt(),
                     valoracion = valoracion,
                     comentario = comentario,
-                    puntosObtenidos = 10,
-                    plato = plato
+                    fecha = fecha,
+                    hora = hora
                 )
-                registros.add(nuevoRegistro)
                 showAddDialog = false
             }
         )
+    }
+
+    // Mostrar error de guardado si existe
+    if (saveError != null) {
+        Snackbar(
+            modifier = Modifier.padding(8.dp),
+            action = {
+                TextButton(onClick = { /* Podrías limpiar el error aquí si lo deseas */ }) {
+                    Text("Cerrar")
+                }
+            }
+        ) { Text(saveError ?: "") }
+    }
+    // Mostrar indicador de guardado
+    if (isSaving) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = GreenPrimary)
+        }
     }
 }
 
@@ -257,6 +321,7 @@ fun AddRegistroConsumoDialog(
     var porciones by remember { mutableStateOf("1.0") }
     var valoracion by remember { mutableStateOf("") }
     var comentario by remember { mutableStateOf("") }
+    var errorMsg by remember { mutableStateOf<String?>(null) }
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -332,18 +397,35 @@ fun AddRegistroConsumoDialog(
                         focusedLabelColor = GreenPrimary
                     )
                 )
+
+                if (errorMsg != null) {
+                    Text(
+                        text = errorMsg ?: "",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
-                    selectedPlato?.let { plato ->
-                        onConfirm(
-                            plato,
-                            porciones.toDoubleOrNull() ?: 1.0,
-                            valoracion.toIntOrNull(),
-                            comentario.takeIf { it.isNotBlank() }
-                        )
+                    val porcionesVal = porciones.toDoubleOrNull()
+                    val valoracionVal = valoracion.toIntOrNull()
+                    when {
+                        selectedPlato == null -> errorMsg = "Debes seleccionar un plato"
+                        porcionesVal == null || porcionesVal < 0.1 || porcionesVal > 10 -> errorMsg = "Porciones debe ser un número entre 0.1 y 10"
+                        valoracion.isNotBlank() && (valoracionVal == null || valoracionVal < 1 || valoracionVal > 5) -> errorMsg = "Valoración debe ser un número entre 1 y 5"
+                        else -> {
+                            errorMsg = null
+                            onConfirm(
+                                selectedPlato!!,
+                                porcionesVal ?: 1.0,
+                                valoracionVal,
+                                comentario.takeIf { it.isNotBlank() }
+                            )
+                        }
                     }
                 },
                 enabled = selectedPlato != null,
