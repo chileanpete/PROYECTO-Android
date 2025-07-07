@@ -43,7 +43,7 @@ fun Navigation(){
             AddPlatoScreen(navController = navController)
         }
         composable<Desafios> {
-            DesafiosScreen(navController = navController)
+            DesafiosScreen()
         }
 
     }

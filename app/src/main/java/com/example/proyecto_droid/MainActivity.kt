@@ -43,6 +43,7 @@ import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.BoxWithConstraints
 import com.example.proyecto_droid.ui.screens.desafios.DesafiosScreen
+import com.example.proyecto_droid.ui.screens.RegistroActividadesScreen
 import com.example.proyecto_droid.util.Constants
 
 class MainActivity : ComponentActivity() {
@@ -70,7 +71,8 @@ fun AppNavHost(navController: NavHostController) {
         composable("register") { RegisterScreen(navController) }
         composable("forgot") { ForgotPasswordScreen(navController) }
         composable("main") { MainAppScreen(navController) }
-        composable("desafios") { DesafiosScreen(navController) }
+        composable("desafios") { DesafiosScreen() }
+        composable("registro-actividades") { RegistroActividadesScreen() }
     }
 }
 
@@ -190,7 +192,7 @@ fun LoginScreen(navController: NavHostController) {
                             delay(1500)
                             loading = false
                             Toast.makeText(context, "¡Login exitoso!", Toast.LENGTH_SHORT).show()
-                            navController.navigate("main") {
+                            navController.navigate("registro-actividades") {
                                 popUpTo("login") { inclusive = true }
                             }
                         }

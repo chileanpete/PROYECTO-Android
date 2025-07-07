@@ -22,7 +22,7 @@ import com.example.proyecto_droid.ui.theme.GreenPrimary
 import com.example.proyecto_droid.viewmodel.DesafiosViewModel
 
 @Composable
-fun DesafiosScreen(navController: NavHostController, viewModel: DesafiosViewModel = viewModel()) {
+fun DesafiosScreenTab(viewModel: DesafiosViewModel = viewModel()) {
     val mostrarDialogo = remember { mutableStateOf(true) }
     val seleccionados = remember { mutableStateListOf<String>() }
 
@@ -187,17 +187,11 @@ fun DesafiosScreen(navController: NavHostController, viewModel: DesafiosViewMode
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Button(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Volver", color = Color.White)
-            }
         }
     }
+}
+
+@Composable
+fun DesafiosScreen() {
+    DesafiosScreenTab()
 }
