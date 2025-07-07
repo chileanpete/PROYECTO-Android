@@ -1,14 +1,17 @@
 package com.example.proyecto_droid.ui.screens.registro
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.proyecto_droid.model.RegistroConsumo
@@ -17,6 +20,8 @@ import com.example.proyecto_droid.network.services.CrearRegistroConsumoRequest
 import com.example.proyecto_droid.network.services.ActualizarRegistroConsumoRequest
 import com.example.proyecto_droid.network.services.EstadisticasConsumo
 import com.example.proyecto_droid.network.services.EstadisticasPeriodo
+import com.example.proyecto_droid.ui.theme.BackgroundLight
+import com.example.proyecto_droid.ui.theme.GreenPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -68,27 +73,33 @@ fun RegistroConsumoScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .background(BackgroundLight)
+            .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
         // Header con estadísticas
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+                containerColor = Color.White
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(16.dp)
         ) {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
                     text = "Registro de Alimentación",
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        color = GreenPrimary
+                    ),
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Registra tus comidas y mantén un seguimiento de tu nutrición",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -100,12 +111,13 @@ fun RegistroConsumoScreen(
             onClick = { showAddDialog = true },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
+                containerColor = GreenPrimary
+            ),
+            shape = RoundedCornerShape(12.dp)
         ) {
-            Icon(Icons.Default.Add, contentDescription = null)
+            Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Agregar Registro de Comida")
+            Text("Agregar Registro de Comida", color = Color.White)
         }
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -158,7 +170,11 @@ fun RegistroConsumoCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -172,20 +188,22 @@ fun RegistroConsumoCard(
                     Text(
                         text = registro.plato?.nombre ?: "Plato no disponible",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = GreenPrimary
                     )
                     Text(
                         text = "${registro.fechaConsumo} - ${registro.horaConsumo}",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 
                 Row {
                     IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar")
+                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = GreenPrimary)
                     }
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Eliminar")
+                        Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -209,7 +227,7 @@ fun RegistroConsumoCard(
                         Icon(
                             Icons.Default.Star,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = GreenPrimary
                         )
                     }
                 }
@@ -242,11 +260,17 @@ fun AddRegistroConsumoDialog(
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Agregar Registro de Comida") },
+        title = { 
+            Text(
+                "Agregar Registro de Comida",
+                color = GreenPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column {
                 // Selector de plato
-                Text("Plato:", style = MaterialTheme.typography.labelMedium)
+                Text("Plato:", style = MaterialTheme.typography.labelMedium, color = GreenPrimary)
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 platos.forEach { plato ->
@@ -258,7 +282,10 @@ fun AddRegistroConsumoDialog(
                     ) {
                         RadioButton(
                             selected = selectedPlato == plato,
-                            onClick = { selectedPlato = plato }
+                            onClick = { selectedPlato = plato },
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = GreenPrimary
+                            )
                         )
                         Text(plato.nombre)
                     }
@@ -271,7 +298,11 @@ fun AddRegistroConsumoDialog(
                     value = porciones,
                     onValueChange = { porciones = it },
                     label = { Text("Porciones") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GreenPrimary,
+                        focusedLabelColor = GreenPrimary
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -281,7 +312,11 @@ fun AddRegistroConsumoDialog(
                     value = valoracion,
                     onValueChange = { valoracion = it },
                     label = { Text("Valoración (1-5)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GreenPrimary,
+                        focusedLabelColor = GreenPrimary
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -291,7 +326,11 @@ fun AddRegistroConsumoDialog(
                     value = comentario,
                     onValueChange = { comentario = it },
                     label = { Text("Comentario (opcional)") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GreenPrimary,
+                        focusedLabelColor = GreenPrimary
+                    )
                 )
             }
         },
@@ -307,13 +346,22 @@ fun AddRegistroConsumoDialog(
                         )
                     }
                 },
-                enabled = selectedPlato != null
+                enabled = selectedPlato != null,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = GreenPrimary
+                ),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Guardar")
+                Text("Guardar", color = Color.White)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = GreenPrimary
+                )
+            ) {
                 Text("Cancelar")
             }
         }
