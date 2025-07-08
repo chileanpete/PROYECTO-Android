@@ -7,12 +7,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.example.proyecto_droid.ui.screens.desafios.DesafiosScreen
 import com.example.proyecto_droid.ui.screens.registro.RegistroConsumoScreen
 import com.example.proyecto_droid.ui.screens.registro.RegistroActividadScreen
 import com.example.proyecto_droid.ui.screens.registro.TalleresScreen
+import com.example.proyecto_droid.ui.theme.GreenPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,8 +35,8 @@ fun RegistroActividadesScreen(
         TopAppBar(
             title = { Text("Registro de Actividades") },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                containerColor = GreenPrimary,
+                titleContentColor = Color.White
             )
         )
         
