@@ -31,8 +31,8 @@ class DesafiosViewModel : ViewModel() {
                         titulo = it.titulo,
                         descripcion = it.descripcion,
                         tipo = when (it.tipo_desafio.lowercase()) {
-                            "diario" -> TipoDesafio.DIARIO
-                            "semanal" -> TipoDesafio.SEMANAL
+                            "actividad_fisica", "consistencia" -> TipoDesafio.DIARIO
+                            "peso", "nutricion" -> TipoDesafio.SEMANAL
                             else -> TipoDesafio.DIARIO
                         },
                         objetivosRelacionados = it.objetivos_relacionados
