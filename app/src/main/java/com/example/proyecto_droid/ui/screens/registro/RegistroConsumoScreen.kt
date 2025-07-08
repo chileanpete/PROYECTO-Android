@@ -42,6 +42,7 @@ fun RegistroConsumoScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isSaving by viewModel.isSaving.collectAsState()
     val saveError by viewModel.saveError.collectAsState()
+    val deleteError by viewModel.deleteError.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var platos by remember { mutableStateOf<List<Plato>>(emptyList()) }
     var showSnackBar by remember { mutableStateOf(false) }
@@ -150,20 +151,20 @@ fun RegistroConsumoScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         // Lista de registros
-        when (uiState) {
+        when (val state = uiState) {
             is RegistroConsumoUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = GreenPrimary)
                 }
             }
             is RegistroConsumoUiState.Error -> {
-                val message = (uiState as RegistroConsumoUiState.Error).message
+                val message = (state as RegistroConsumoUiState.Error).message
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Error: $message", color = MaterialTheme.colorScheme.error)
                 }
             }
             is RegistroConsumoUiState.Success -> {
-                val registros = (uiState as RegistroConsumoUiState.Success).registros
+                val registros = (state as RegistroConsumoUiState.Success).registros
                 if (registros.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("No hay registros de alimentación.")
@@ -175,12 +176,47 @@ fun RegistroConsumoScreen(
                         items(registros) { registro ->
                             RegistroConsumoCard(
                                 registro = registro,
-                                onEdit = { /* TODO: Implementar edición */ },
-                                onDelete = { /* TODO: Implementar eliminación real */ }
+                                onEdit = null, // Eliminar
+                                onDelete = {
+                                    viewModel.confirmarEliminacion(registro.idConsumo)
+                                }
                             )
                         }
                     }
                 }
+            }
+            is RegistroConsumoUiState.DeleteConfirmation -> {
+                AlertDialog(
+                    onDismissRequest = { viewModel.limpiarMensajes() },
+                    title = { Text("Confirmar eliminación") },
+                    text = { Text("¿Estás seguro de que quieres eliminar este registro? Esta acción no se puede deshacer.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.eliminarRegistroConsumo(state.id)
+                            }
+                        ) {
+                            Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { viewModel.limpiarMensajes() }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
+            }
+            is RegistroConsumoUiState.DeleteSuccess -> {
+                AlertDialog(
+                    onDismissRequest = { viewModel.limpiarMensajes() },
+                    title = { Text("Éxito") },
+                    text = { Text(state.message) },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.limpiarMensajes() }) {
+                            Text("Aceptar")
+                        }
+                    }
+                )
             }
         }
     }
@@ -224,12 +260,26 @@ fun RegistroConsumoScreen(
             CircularProgressIndicator(color = GreenPrimary)
         }
     }
+
+    // Mostrar error de eliminación si existe
+    deleteError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { viewModel.limpiarMensajes() },
+            title = { Text("Error") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.limpiarMensajes() }) {
+                    Text("Aceptar")
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun RegistroConsumoCard(
     registro: RegistroConsumo,
-    onEdit: () -> Unit,
+    onEdit: (() -> Unit)?,
     onDelete: () -> Unit
 ) {
     Card(
@@ -263,10 +313,7 @@ fun RegistroConsumoCard(
                 }
                 
                 Row {
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = GreenPrimary)
-                    }
-                    IconButton(onClick = onDelete) {
+                    IconButton(onClick = { onDelete() }) {
                         Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
                     }
                 }

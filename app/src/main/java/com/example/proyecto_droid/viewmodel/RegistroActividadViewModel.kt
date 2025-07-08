@@ -19,6 +19,8 @@ sealed class RegistroActividadUiState {
     object Loading : RegistroActividadUiState()
     data class Success(val registros: List<RegistroActividad>) : RegistroActividadUiState()
     data class Error(val message: String) : RegistroActividadUiState()
+    data class DeleteConfirmation(val id: Int) : RegistroActividadUiState()
+    data class DeleteSuccess(val message: String) : RegistroActividadUiState()
 }
 
 class RegistroActividadViewModel(app: Application) : AndroidViewModel(app) {
@@ -34,6 +36,9 @@ class RegistroActividadViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _saveError = MutableStateFlow<String?>(null)
     val saveError: StateFlow<String?> = _saveError.asStateFlow()
+
+    private val _deleteError = MutableStateFlow<String?>(null)
+    val deleteError: StateFlow<String?> = _deleteError.asStateFlow()
 
     init {
         cargarRegistros()
@@ -150,6 +155,41 @@ class RegistroActividadViewModel(app: Application) : AndroidViewModel(app) {
             } finally {
                 _isSaving.value = false
             }
+        }
+    }
+
+    fun confirmarEliminacion(id: Int) {
+        _uiState.value = RegistroActividadUiState.DeleteConfirmation(id)
+    }
+
+    fun eliminarRegistroActividad(id: Int) {
+        viewModelScope.launch {
+            try {
+                println("Intentando eliminar registro de actividad con ID: $id")
+                val response = service.eliminarRegistroActividad(id)
+                println("Código de respuesta: ${response.code()}")
+                println("Body: ${response.body()}")
+                println("Error body: ${response.errorBody()?.string()}")
+                
+                if (response.isSuccessful && response.body()?.success == true) {
+                    _uiState.value = RegistroActividadUiState.DeleteSuccess("Registro eliminado exitosamente")
+                    cargarRegistros()
+                } else {
+                    val errorMsg = response.errorBody()?.string() ?: response.body()?.message ?: "Error al eliminar el registro"
+                    println("Error al eliminar: $errorMsg")
+                    _deleteError.value = errorMsg
+                }
+            } catch (e: Exception) {
+                println("Excepción al eliminar: ${e.localizedMessage}")
+                _deleteError.value = "Error: ${e.localizedMessage}"
+            }
+        }
+    }
+
+    fun limpiarMensajes() {
+        _deleteError.value = null
+        if (_uiState.value is RegistroActividadUiState.DeleteSuccess) {
+            cargarRegistros()
         }
     }
 } 

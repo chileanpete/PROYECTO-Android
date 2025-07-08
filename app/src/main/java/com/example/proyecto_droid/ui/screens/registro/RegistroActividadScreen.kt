@@ -31,6 +31,7 @@ fun RegistroActividadScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isSaving by viewModel.isSaving.collectAsState()
     val saveError by viewModel.saveError.collectAsState()
+    val deleteError by viewModel.deleteError.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 
     // TODO: Cargar tipos de ejercicio reales si tienes endpoint, aquí simulado
@@ -126,20 +127,20 @@ fun RegistroActividadScreen(
         }
 
         // Lista de registros
-        when (uiState) {
+        when (val state = uiState) {
             is RegistroActividadUiState.Loading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = GreenPrimary)
                 }
             }
             is RegistroActividadUiState.Error -> {
-                val message = (uiState as RegistroActividadUiState.Error).message
+                val message = (state as RegistroActividadUiState.Error).message
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text("Error: $message", color = MaterialTheme.colorScheme.error)
                 }
             }
             is RegistroActividadUiState.Success -> {
-                val registros = (uiState as RegistroActividadUiState.Success).registros
+                val registros = (state as RegistroActividadUiState.Success).registros
                 if (registros.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text("No hay registros de actividad física.")
@@ -151,13 +152,62 @@ fun RegistroActividadScreen(
                         items(registros) { registro ->
                             RegistroActividadCard(
                                 registro = registro,
-                                onEdit = { /* TODO: Implementar edición */ },
-                                onDelete = { /* TODO: Implementar eliminación real */ }
+                                onEdit = null, // Eliminar
+                                onDelete = {
+                                    viewModel.confirmarEliminacion(registro.idActividad)
+                                }
                             )
                         }
                     }
                 }
             }
+            is RegistroActividadUiState.DeleteConfirmation -> {
+                AlertDialog(
+                    onDismissRequest = { viewModel.limpiarMensajes() },
+                    title = { Text("Confirmar eliminación") },
+                    text = { Text("¿Estás seguro de que quieres eliminar este registro? Esta acción no se puede deshacer.") },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                viewModel.eliminarRegistroActividad(state.id)
+                            }
+                        ) {
+                            Text("Eliminar", color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { viewModel.limpiarMensajes() }) {
+                            Text("Cancelar")
+                        }
+                    }
+                )
+            }
+            is RegistroActividadUiState.DeleteSuccess -> {
+                AlertDialog(
+                    onDismissRequest = { viewModel.limpiarMensajes() },
+                    title = { Text("Éxito") },
+                    text = { Text(state.message) },
+                    confirmButton = {
+                        TextButton(onClick = { viewModel.limpiarMensajes() }) {
+                            Text("Aceptar")
+                        }
+                    }
+                )
+            }
+        }
+
+        // Mostrar error de eliminación si existe
+        deleteError?.let { error ->
+            AlertDialog(
+                onDismissRequest = { viewModel.limpiarMensajes() },
+                title = { Text("Error") },
+                text = { Text(error) },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.limpiarMensajes() }) {
+                        Text("Aceptar")
+                    }
+                }
+            )
         }
     }
     
@@ -193,7 +243,7 @@ fun RegistroActividadScreen(
 @Composable
 fun RegistroActividadCard(
     registro: RegistroActividad,
-    onEdit: () -> Unit,
+    onEdit: (() -> Unit)?,
     onDelete: () -> Unit
 ) {
     Card(
@@ -227,8 +277,10 @@ fun RegistroActividadCard(
                 }
                 
                 Row {
-                    IconButton(onClick = onEdit) {
-                        Icon(Icons.Default.Edit, contentDescription = "Editar", tint = GreenPrimary)
+                    onEdit?.let { edit ->
+                        IconButton(onClick = edit) {
+                            Icon(Icons.Default.Edit, contentDescription = "Editar", tint = GreenPrimary)
+                        }
                     }
                     IconButton(onClick = onDelete) {
                         Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
