@@ -14,6 +14,8 @@ import kotlinx.coroutines.launch
 import retrofit2.HttpException
 import java.io.IOException
 import org.json.JSONObject
+import com.example.proyecto_droid.util.FileUtils
+import java.io.File
 
 sealed class RegistroActividadUiState {
     object Loading : RegistroActividadUiState()
@@ -39,6 +41,15 @@ class RegistroActividadViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _deleteError = MutableStateFlow<String?>(null)
     val deleteError: StateFlow<String?> = _deleteError.asStateFlow()
+
+    private val _isExporting = MutableStateFlow(false)
+    val isExporting: StateFlow<Boolean> = _isExporting.asStateFlow()
+
+    private val _exportError = MutableStateFlow<String?>(null)
+    val exportError: StateFlow<String?> = _exportError.asStateFlow()
+
+    private val _pdfFile = MutableStateFlow<File?>(null)
+    val pdfFile: StateFlow<File?> = _pdfFile.asStateFlow()
 
     init {
         cargarRegistros()
@@ -191,5 +202,66 @@ class RegistroActividadViewModel(app: Application) : AndroidViewModel(app) {
         if (_uiState.value is RegistroActividadUiState.DeleteSuccess) {
             cargarRegistros()
         }
+    }
+
+    fun exportarPDF() {
+        _isExporting.value = true
+        _exportError.value = null
+        _pdfFile.value = null
+        
+        viewModelScope.launch {
+            try {
+                println("Iniciando exportación de PDF de actividad...")
+                val response = service.exportarPDF()
+                println("Respuesta recibida: ${response.code()}")
+                
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val pdfData = response.body()?.data
+                    if (pdfData != null) {
+                        println("Datos PDF recibidos, guardando archivo...")
+                        // Guardar PDF en el dispositivo
+                        val file = FileUtils.savePdfToDevice(context, pdfData.content, pdfData.filename)
+                        if (file != null) {
+                            _pdfFile.value = file
+                            println("PDF guardado exitosamente: ${file.absolutePath}")
+                        } else {
+                            println("Error al guardar PDF en dispositivo")
+                            _exportError.value = "Error al guardar el PDF en el dispositivo"
+                        }
+                    } else {
+                        println("No se recibieron datos del PDF")
+                        _exportError.value = "No se recibieron datos del PDF"
+                    }
+                } else {
+                    val errorMsg = response.body()?.message ?: "Error al generar PDF"
+                    println("Error en respuesta: $errorMsg")
+                    _exportError.value = errorMsg
+                }
+            } catch (e: Exception) {
+                println("Excepción durante exportación: ${e.localizedMessage}")
+                _exportError.value = "Error: ${e.localizedMessage}"
+            } finally {
+                _isExporting.value = false
+            }
+        }
+    }
+
+    fun compartirPDF() {
+        val file = _pdfFile.value
+        if (file != null) {
+            println("Compartiendo PDF: ${file.absolutePath}")
+            FileUtils.sharePdf(context, file)
+        } else {
+            println("No hay archivo PDF para compartir")
+        }
+    }
+
+    fun limpiarPDF() {
+        _pdfFile.value = null
+        _exportError.value = null
+    }
+
+    fun limpiarErroresExportacion() {
+        _exportError.value = null
     }
 } 

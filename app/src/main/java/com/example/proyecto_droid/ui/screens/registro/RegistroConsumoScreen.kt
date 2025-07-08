@@ -1,6 +1,10 @@
 package com.example.proyecto_droid.ui.screens.registro
 
 import android.app.Application
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,6 +13,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,6 +29,7 @@ import com.example.proyecto_droid.ui.theme.BackgroundLight
 import com.example.proyecto_droid.ui.theme.GreenPrimary
 import com.example.proyecto_droid.viewmodel.RegistroConsumoViewModel
 import com.example.proyecto_droid.viewmodel.RegistroConsumoUiState
+import androidx.core.content.ContextCompat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,10 +50,37 @@ fun RegistroConsumoScreen(
     val isSaving by viewModel.isSaving.collectAsState()
     val saveError by viewModel.saveError.collectAsState()
     val deleteError by viewModel.deleteError.collectAsState()
+    val isExporting by viewModel.isExporting.collectAsState()
+    val exportError by viewModel.exportError.collectAsState()
+    val pdfFile by viewModel.pdfFile.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var platos by remember { mutableStateOf<List<Plato>>(emptyList()) }
     var showSnackBar by remember { mutableStateOf(false) }
     var snackBarMessage by remember { mutableStateOf("") }
+
+    // Launcher para permisos de almacenamiento
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.exportarPDF()
+        }
+    }
+
+    // Función para solicitar permisos y exportar
+    fun requestPermissionAndExport() {
+        when {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                viewModel.exportarPDF()
+            }
+            else -> {
+                permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+        }
+    }
 
     // Simulación: podrías cargar los platos desde la API si lo deseas
     LaunchedEffect(Unit) {
@@ -103,34 +137,37 @@ fun RegistroConsumoScreen(
             .background(BackgroundLight)
             .padding(horizontal = 16.dp, vertical = 24.dp)
     ) {
-        // Header con estadísticas
-        Card(
+        // Header con título y botón de exportar
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            shape = RoundedCornerShape(16.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp)
+            Text(
+                text = "Registros de Consumo",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            IconButton(
+                onClick = { requestPermissionAndExport() },
+                enabled = !isExporting
             ) {
-                Text(
-                    text = "Registro de Alimentación",
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        color = GreenPrimary
-                    ),
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Registra tus comidas y mantén un seguimiento de tu nutrición",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                if (isExporting) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.Download,
+                        contentDescription = "Exportar PDF",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
         
         // Botón para agregar registro
@@ -273,6 +310,73 @@ fun RegistroConsumoScreen(
                 }
             }
         )
+    }
+
+    // Mostrar error de exportación si existe
+    exportError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { viewModel.limpiarErroresExportacion() },
+            title = { Text("Error al exportar") },
+            text = { Text(error) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.limpiarErroresExportacion() }) {
+                    Text("Aceptar")
+                }
+            }
+        )
+    }
+
+    // Mostrar mensaje de éxito de exportación y opciones
+    if (!isExporting && pdfFile != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.limpiarPDF() },
+            title = { Text("PDF Generado Exitosamente") },
+            text = { 
+                Text("El PDF se ha guardado en tu dispositivo en la carpeta Downloads. ¿Qué te gustaría hacer?")
+            },
+            confirmButton = {
+                TextButton(onClick = { viewModel.compartirPDF() }) {
+                    Text("Compartir")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.limpiarPDF() }) {
+                    Text("Cerrar")
+                }
+            }
+        )
+    }
+
+    // Mostrar mensaje de carga mientras se genera
+    if (isExporting) {
+        AlertDialog(
+            onDismissRequest = { },
+            title = { Text("Generando PDF") },
+            text = { Text("Por favor espera mientras se genera el reporte...") },
+            confirmButton = { }
+        )
+    }
+
+    // Snackbar para mostrar mensajes de éxito
+    var showSuccessSnackbar by remember { mutableStateOf(false) }
+    
+    LaunchedEffect(pdfFile) {
+        if (pdfFile != null) {
+            showSuccessSnackbar = true
+        }
+    }
+    
+    if (showSuccessSnackbar) {
+        Snackbar(
+            modifier = Modifier.padding(16.dp),
+            action = {
+                TextButton(onClick = { showSuccessSnackbar = false }) {
+                    Text("Cerrar")
+                }
+            }
+        ) {
+            Text("PDF descargado exitosamente en Downloads")
+        }
     }
 }
 

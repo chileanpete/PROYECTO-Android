@@ -26,6 +26,9 @@ interface RegistroActividadService {
     @DELETE("registro-actividad/{id}")
     suspend fun eliminarRegistroActividad(@Path("id") id: Int): Response<ApiResponse<Unit>>
     
+    @GET("registro-actividad/exportar/pdf")
+    suspend fun exportarPDF(): Response<ApiResponse<ExportarPDFResponse>>
+    
     @GET("registro-actividad/estadisticas")
     suspend fun getEstadisticas(): Response<ApiResponse<EstadisticasActividad>>
     

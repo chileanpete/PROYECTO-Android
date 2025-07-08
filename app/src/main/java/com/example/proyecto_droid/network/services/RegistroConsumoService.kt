@@ -27,6 +27,9 @@ interface RegistroConsumoService {
     @DELETE("registro-consumo/{id}")
     suspend fun eliminarRegistroConsumo(@Path("id") id: Int): Response<ApiResponse<Unit>>
     
+    @GET("registro-consumo/exportar/pdf")
+    suspend fun exportarPDF(): Response<ApiResponse<ExportarPDFResponse>>
+    
     @GET("registro-consumo/estadisticas")
     suspend fun getEstadisticas(): Response<ApiResponse<EstadisticasConsumo>>
     
@@ -87,4 +90,9 @@ data class ApiResponse<T>(
     val data: T? = null,
     val message: String? = null,
     val errors: Map<String, List<String>>? = null
+)
+
+data class ExportarPDFResponse(
+    val filename: String,
+    val content: String
 ) 
