@@ -27,7 +27,7 @@ class UserRepository(context: Context) {
             userDao.insertUser(userEntity)
             
             // Guardar sesión
-            sessionManager.saveUserSession(user.email, "${user.nombre} ${user.apellidos}")
+            sessionManager.saveUserSession(user.email, "${user.nombre} ${user.apellidos}", "1")
             
             Result.success(user)
         } catch (e: Exception) {
@@ -52,7 +52,7 @@ class UserRepository(context: Context) {
                 userDao.updateLastLogin(email, System.currentTimeMillis())
                 
                 // Guardar sesión
-                sessionManager.saveUserSession(email, "${userEntity.nombre} ${userEntity.apellidos}")
+                sessionManager.saveUserSession(email, "${userEntity.nombre} ${userEntity.apellidos}", "1")
                 
                 Result.success(userEntity.toUser())
             } else {

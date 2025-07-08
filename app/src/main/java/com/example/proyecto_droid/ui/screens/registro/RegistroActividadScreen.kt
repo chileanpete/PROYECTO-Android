@@ -28,14 +28,52 @@ import com.example.proyecto_droid.viewmodel.RegistroActividadUiState
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import android.app.Activity
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import com.example.proyecto_droid.data.local.SessionManager
+import android.util.Log
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+fun formatearFecha(fechaIso: String?): String {
+    if (fechaIso == null) return "-"
+    return try {
+        // Intenta parsear como LocalDateTime (con hora)
+        val fecha = LocalDateTime.parse(fechaIso, DateTimeFormatter.ISO_DATE_TIME)
+        fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+    } catch (e: Exception) {
+        try {
+            // Intenta parsear solo la fecha (sin hora)
+            val fecha = java.time.LocalDate.parse(fechaIso, DateTimeFormatter.ISO_DATE)
+            fecha.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        } catch (e2: Exception) {
+            // Si todo falla, intenta extraer los primeros 10 caracteres (yyyy-MM-dd)
+            if (fechaIso.length >= 10) {
+                val partes = fechaIso.substring(0, 10).split("-")
+                if (partes.size == 3) {
+                    return "${partes[2]}/${partes[1]}/${partes[0]}"
+                }
+            }
+            "-"
+        }
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RegistroActividadScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    idUsuario: Int = 1 // TODO: Reemplaza por el id real del usuario logueado
 ) {
     val viewModel: RegistroActividadViewModel = viewModel()
     val context = LocalContext.current
+    val sessionManager = remember { SessionManager(context) }
+    var idUsuario by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(idUsuario) {
+        if (idUsuario != null) {
+            viewModel.cargarRegistros(idUsuario!!)
+        }
+    }
     val uiState by viewModel.uiState.collectAsState()
     val isSaving by viewModel.isSaving.collectAsState()
     val saveError by viewModel.saveError.collectAsState()
@@ -155,14 +193,16 @@ fun RegistroActividadScreen(
         
         // Mostrar error de guardado si existe
         if (saveError != null) {
-            Snackbar(
-                modifier = Modifier.padding(8.dp),
-                action = {
-                    TextButton(onClick = { /* Podrías limpiar el error aquí si lo deseas */ }) {
+            AlertDialog(
+                onDismissRequest = { viewModel.saveError.value = null },
+                title = { Text("Error al guardar registro") },
+                text = { Text(saveError ?: "") },
+                confirmButton = {
+                    TextButton(onClick = { viewModel.saveError.value = null }) {
                         Text("Cerrar")
                     }
                 }
-            ) { Text(saveError ?: "") }
+            )
         }
 
         // Lista de registros
@@ -189,12 +229,198 @@ fun RegistroActividadScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(registros) { registro ->
-                            // Aquí deberías tener un RegistroActividadCard o similar
-                            Text(registro.toString())
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color.White
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = "Fecha: ${formatearFecha(registro.fecha_actividad)}",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Tipo: ${registro.tipoEjercicio?.nombre ?: "-"}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        text = "Duración: ${registro.duracion_minutos ?: "-"} min",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    Text(
+                                        text = "Intensidad: ${registro.intensidad ?: "-"}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    if (!registro.comentario.isNullOrBlank()) {
+                                        Text(
+                                            text = "Comentario: ${registro.comentario}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Color.Gray
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
     }
+
+    if (showAddDialog) {
+        AddRegistroActividadDialog(
+            tiposEjercicio = tiposEjercicio,
+            onDismiss = { showAddDialog = false },
+            onConfirm = { tipoEjercicio, duracion, intensidad, comentario ->
+                Log.d("RegistroAPI", "onConfirm presionado")
+                Log.d("RegistroAPI", "idUsuario: $idUsuario")
+                val idUsuarioFinal = idUsuario ?: 1 // Fallback temporal para pruebas
+                val fecha = "2024-01-15"
+                val horaInicio = "07:00"
+                val horaFin = "08:00"
+                val caloriasQuemadas = duracion * 5 // Simulación
+                viewModel.viewModelScope.launch {
+                    Log.d("RegistroAPI", "Llamando a crearRegistroActividad")
+                    viewModel.crearRegistroActividad(
+                        idUsuario = idUsuarioFinal,
+                        idTipoEjercicio = tipoEjercicio.idTipoEjercicio,
+                        idRutina = null,
+                        idRutinaEjercicio = null,
+                        fecha = fecha,
+                        horaInicio = horaInicio,
+                        horaFin = horaFin,
+                        duracion = duracion,
+                        caloriasQuemadas = caloriasQuemadas,
+                        intensidad = intensidad ?: tipoEjercicio.intensidadRecomendada,
+                        comentario = comentario,
+                        completada = true
+                    )
+                }
+                showAddDialog = false
+            }
+        )
+    }
+} 
+
+@Composable
+fun AddRegistroActividadDialog(
+    tiposEjercicio: List<TipoEjercicio>,
+    onDismiss: () -> Unit,
+    onConfirm: (TipoEjercicio, Int, Int?, String?) -> Unit
+) {
+    var selectedTipoEjercicio by remember { mutableStateOf<TipoEjercicio?>(null) }
+    var duracion by remember { mutableStateOf("30") }
+    var intensidad by remember { mutableStateOf("") }
+    var comentario by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                "Agregar Registro de Actividad",
+                color = GreenPrimary,
+                fontWeight = FontWeight.Bold
+            )
+        },
+        text = {
+            Column {
+                Text("Tipo de Ejercicio:", style = MaterialTheme.typography.labelMedium, color = GreenPrimary)
+                Spacer(modifier = Modifier.height(4.dp))
+                tiposEjercicio.forEach { tipo ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = selectedTipoEjercicio == tipo,
+                            onClick = { selectedTipoEjercicio = tipo },
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = GreenPrimary
+                            )
+                        )
+                        Column {
+                            Text(tipo.nombre, fontWeight = FontWeight.Medium)
+                            Text(
+                                tipo.descripcion ?: "",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = duracion,
+                    onValueChange = { duracion = it },
+                    label = { Text("Duración (minutos)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GreenPrimary,
+                        focusedLabelColor = GreenPrimary
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = intensidad,
+                    onValueChange = { intensidad = it },
+                    label = { Text("Intensidad (opcional, número)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GreenPrimary,
+                        focusedLabelColor = GreenPrimary
+                    )
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = comentario,
+                    onValueChange = { comentario = it },
+                    label = { Text("Comentario (opcional)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = GreenPrimary,
+                        focusedLabelColor = GreenPrimary
+                    )
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    selectedTipoEjercicio?.let { tipo ->
+                        onConfirm(
+                            tipo,
+                            duracion.toIntOrNull() ?: 30,
+                            intensidad.toIntOrNull(),
+                            comentario.takeIf { it.isNotBlank() }
+                        )
+                    }
+                },
+                enabled = selectedTipoEjercicio != null,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = GreenPrimary
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text("Guardar", color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = GreenPrimary
+                )
+            ) {
+                Text("Cancelar")
+            }
+        }
+    )
 } 
