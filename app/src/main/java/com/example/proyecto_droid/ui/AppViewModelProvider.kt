@@ -12,21 +12,22 @@ import com.example.proyecto_droid.ui.screens.lugares.LugaresViewModel
 object AppViewModelProvider {
     val Factory = viewModelFactory {
         initializer {
+            val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Proyecto_droid)
             LugaresViewModel(
-                lugarService= App().container.lugarApiService
-
+                lugarService = application.container.lugarApiService
             )
         }
         initializer {
+            val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Proyecto_droid)
             PlatosViewModel(
-                platoServices= App().container.platoApiService
-
+                platoServices = application.container.platoApiService
             )
         }
         initializer {
+            val application = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as Proyecto_droid)
             AuthViewModel(
-                authService = App().container.authApiService,
-                context = App().baseContext
+                authService = application.container.authApiService,
+                context = application.applicationContext
             )
         }
     }

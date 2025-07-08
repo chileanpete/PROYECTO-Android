@@ -25,8 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.proyecto_droid.ui.AppViewModelProvider
-import com.example.proyecto_droid.ui.Login
-import com.example.proyecto_droid.ui.Platos
+import com.example.proyecto_droid.ui.Routes
+
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel = viewModel(factory = AppViewModelProvider.Factory),
@@ -41,8 +41,8 @@ fun LoginScreen(
     // Redirección al detectar login exitoso
     LaunchedEffect(authState) {
         if (authState is AuthUiState.Success) {
-            navController.navigate(Platos) {
-                popUpTo(Login) { inclusive = true } // Quitar la pantalla de la pila de navegación
+            navController.navigate(Routes.PLATOS) {
+                popUpTo(Routes.LOGIN) { inclusive = true } // Quitar la pantalla de la pila de navegación
             }
         }
     }

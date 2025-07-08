@@ -2,10 +2,12 @@ package com.example.proyecto_droid.ui.screens.platos
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
@@ -21,7 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto_droid.data.model.Plato
-import com.example.proyecto_droid.ui.AddPlato
+import com.example.proyecto_droid.ui.Routes
+
+
 
 @Composable
 fun PlatosScreen(
@@ -35,7 +39,7 @@ fun PlatosScreen(
     }
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = {navController.navigate(AddPlato)}) {
+            FloatingActionButton(onClick = {navController.navigate(Routes.ADD_PLATO)}) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar Usuario")
             }
         }
@@ -61,6 +65,25 @@ fun PlatosScreen(
 
                 else -> {}
             }
+        }
+    }
+}
+
+@Composable
+private fun PlatoList(
+    platos: List<Plato>,
+    modifier: Modifier = Modifier
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 300.dp),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(8.dp)
+    ) {
+        items(
+            items = platos,
+            key = { it.id } // Opcional para mejor rendimiento
+        ) { plato ->
+            PlatoCard(plato = plato)
         }
     }
 }

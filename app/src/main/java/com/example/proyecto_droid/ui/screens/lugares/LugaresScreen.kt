@@ -2,10 +2,12 @@ package com.example.proyecto_droid.ui.screens.lugares
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
@@ -21,9 +23,11 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto_droid.data.model.Lugar
-import com.example.proyecto_droid.ui.AddLugar
+import com.example.proyecto_droid.data.model.Plato
+import com.example.proyecto_droid.ui.Routes
 import com.example.proyecto_droid.ui.screens.lugares.LugaresUiState
 import com.example.proyecto_droid.ui.screens.lugares.LugaresViewModel
+import com.example.proyecto_droid.ui.screens.platos.PlatoCard
 
 @Composable
 fun LugaresScreen(
@@ -37,7 +41,7 @@ fun LugaresScreen(
     }
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = {navController.navigate(AddLugar)}) {
+            FloatingActionButton(onClick = {navController.navigate(Routes.ADD_LUGAR)}) {
                 Icon(Icons.Default.Add, contentDescription = "Agregar Usuario")
             }
         }
@@ -63,6 +67,24 @@ fun LugaresScreen(
 
                 else -> {}
             }
+        }
+    }
+}
+@Composable
+private fun LugarList(
+    lugares: List<Lugar>,
+    modifier: Modifier = Modifier
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 300.dp),
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(8.dp)
+    ) {
+        items(
+            items = lugares,
+            key = { it.id } // Opcional para mejor rendimiento
+        ) { lugar ->
+            LugarCard(lugar = lugar)
         }
     }
 }

@@ -22,15 +22,15 @@ fun AuthManager(viewModel: AuthViewModel = viewModel(factory = AppViewModelProvi
         when (authState) {
             is AuthUiState.loggedIn -> {
                 if (authState.logged) {
-                    navController.navigate(Platos) {
-                        popUpTo(AuthManager) {
+                    navController.navigate(Routes.PLATOS) {
+                        popUpTo(Routes.AUTH_MANAGER) {
                             inclusive = true
                         } // Quitar la pantalla de la pila de navegación
                     }
                 }
                 if (!authState.logged) {
-                    navController.navigate(Login) {
-                        popUpTo(AuthManager) {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.AUTH_MANAGER) {
                             inclusive = true
                         } // Quitar la pantalla de la pila de navegación
                     }
