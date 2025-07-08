@@ -27,6 +27,7 @@ import com.example.proyecto_droid.viewmodel.RegistroActividadViewModel
 import com.example.proyecto_droid.viewmodel.RegistroActividadUiState
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
+import android.app.Activity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,6 +44,7 @@ fun RegistroActividadScreen(
     val exportError by viewModel.exportError.collectAsState()
     val pdfFile by viewModel.pdfFile.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    val activity = LocalContext.current as? Activity
 
     // Launcher para permisos de almacenamiento
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -267,10 +269,10 @@ fun RegistroActividadScreen(
                 onDismissRequest = { viewModel.limpiarPDF() },
                 title = { Text("PDF Generado Exitosamente") },
                 text = { 
-                    Text("El PDF se ha guardado en tu dispositivo en la carpeta Downloads. ¿Qué te gustaría hacer?")
+                    Text("El PDF se ha guardado en tu dispositivo en la carpeta interna. ¿Qué te gustaría hacer?")
                 },
                 confirmButton = {
-                    TextButton(onClick = { viewModel.compartirPDF() }) {
+                    TextButton(onClick = { activity?.let { viewModel.compartirPDF(it) } }) {
                         Text("Compartir")
                     }
                 },

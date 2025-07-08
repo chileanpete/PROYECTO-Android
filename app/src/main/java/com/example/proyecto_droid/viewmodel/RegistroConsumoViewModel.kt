@@ -17,6 +17,7 @@ import java.io.IOException
 import org.json.JSONObject
 import com.example.proyecto_droid.util.FileUtils
 import java.io.File
+import android.content.Context
 
 sealed class RegistroConsumoUiState {
     object Loading : RegistroConsumoUiState()
@@ -240,7 +241,7 @@ class RegistroConsumoViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun compartirPDF() {
+    fun compartirPDF(context: Context) {
         val file = _pdfFile.value
         if (file != null) {
             println("Compartiendo PDF: ${file.absolutePath}")

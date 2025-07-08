@@ -30,6 +30,7 @@ import com.example.proyecto_droid.ui.theme.GreenPrimary
 import com.example.proyecto_droid.viewmodel.RegistroConsumoViewModel
 import com.example.proyecto_droid.viewmodel.RegistroConsumoUiState
 import androidx.core.content.ContextCompat
+import android.app.Activity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -327,15 +328,16 @@ fun RegistroConsumoScreen(
     }
 
     // Mostrar mensaje de éxito de exportación y opciones
+    val activity = LocalContext.current as? Activity
     if (!isExporting && pdfFile != null) {
         AlertDialog(
             onDismissRequest = { viewModel.limpiarPDF() },
             title = { Text("PDF Generado Exitosamente") },
             text = { 
-                Text("El PDF se ha guardado en tu dispositivo en la carpeta Downloads. ¿Qué te gustaría hacer?")
+                Text("El PDF se ha guardado en tu dispositivo en la carpeta interna. ¿Qué te gustaría hacer?")
             },
             confirmButton = {
-                TextButton(onClick = { viewModel.compartirPDF() }) {
+                TextButton(onClick = { activity?.let { viewModel.compartirPDF(it) } }) {
                     Text("Compartir")
                 }
             },
