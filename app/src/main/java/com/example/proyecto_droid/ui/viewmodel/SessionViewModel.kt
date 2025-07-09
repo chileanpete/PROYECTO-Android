@@ -8,6 +8,7 @@ import com.example.proyecto_droid.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class SessionUiState(
@@ -54,33 +55,35 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             _uiState.value = _uiState.value.copy(isLoading = true)
             
             try {
-                // Verificar si hay una sesión activa
-                val isLoggedIn = userRepository.isUserLoggedIn()
-                val userEmail = userRepository.getCurrentUserEmail()
-                val userName = userRepository.getCurrentUserName()
+                // Obtener datos de sesión directamente (sin flows anidados)
+                val isLoggedIn = userRepository.isUserLoggedIn().first()
                 
-                // Combinar los flujos
-                isLoggedIn.collect { loggedIn ->
-                    userEmail.collect { email ->
-                        userName.collect { name ->
-                            val currentUser = if (loggedIn) {
-                                // Intentar obtener el perfil del usuario desde la API
-                                try {
-                                    userRepository.getCurrentUserProfile().getOrNull()
-                                } catch (e: Exception) {
-                                    null
-                                }
-                            } else null
-                            
-                            _uiState.value = SessionUiState(
-                                isLoggedIn = loggedIn,
-                                currentUser = currentUser,
-                                userEmail = email,
-                                userName = name,
-                                isLoading = false
-                            )
-                        }
+                if (isLoggedIn) {
+                    val userEmail = userRepository.getCurrentUserEmail().first()
+                    val userName = userRepository.getCurrentUserName().first()
+                    
+                    // Intentar obtener el perfil del usuario desde la API de forma asíncrona
+                    val currentUser = try {
+                        userRepository.getCurrentUserProfile().getOrNull()
+                    } catch (e: Exception) {
+                        null
                     }
+                    
+                    _uiState.value = SessionUiState(
+                        isLoggedIn = true,
+                        currentUser = currentUser,
+                        userEmail = userEmail,
+                        userName = userName,
+                        isLoading = false
+                    )
+                } else {
+                    _uiState.value = SessionUiState(
+                        isLoggedIn = false,
+                        currentUser = null,
+                        userEmail = null,
+                        userName = null,
+                        isLoading = false
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
