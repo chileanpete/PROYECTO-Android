@@ -17,6 +17,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.proyecto_droid.model.Plato
 import com.example.proyecto_droid.ui.theme.GreenPrimary
+import androidx.compose.ui.res.stringResource
+import com.example.proyecto_droid.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +38,7 @@ fun AddRegistroConsumoDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                "Agregar Registro de Comida",
+                stringResource(R.string.dialog_titulo_agregar_consumo),
                 color = GreenPrimary,
                 fontWeight = FontWeight.Bold
             )
@@ -44,7 +46,7 @@ fun AddRegistroConsumoDialog(
         text = {
             Column {
                 // Selector de plato con dropdown
-                Text("Plato:", style = MaterialTheme.typography.labelMedium, color = GreenPrimary)
+                Text(stringResource(R.string.dialog_label_plato), style = MaterialTheme.typography.labelMedium, color = GreenPrimary)
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 ExposedDropdownMenuBox(
@@ -56,7 +58,7 @@ fun AddRegistroConsumoDialog(
                         onValueChange = {},
                         readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        placeholder = { Text("Selecciona un plato") },
+                        placeholder = { Text(stringResource(R.string.dialog_placeholder_selecciona_plato)) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .menuAnchor(),
@@ -88,7 +90,7 @@ fun AddRegistroConsumoDialog(
                 OutlinedTextField(
                     value = porciones,
                     onValueChange = { porciones = it },
-                    label = { Text("Porciones") },
+                    label = { Text(stringResource(R.string.dialog_label_porciones)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -103,7 +105,7 @@ fun AddRegistroConsumoDialog(
                 OutlinedTextField(
                     value = valoracion,
                     onValueChange = { valoracion = it },
-                    label = { Text("Valoración (1-5)") },
+                    label = { Text(stringResource(R.string.dialog_label_valoracion)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -118,7 +120,7 @@ fun AddRegistroConsumoDialog(
                 OutlinedTextField(
                     value = comentario,
                     onValueChange = { comentario = it },
-                    label = { Text("Comentario (opcional)") },
+                    label = { Text(stringResource(R.string.dialog_label_comentario)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = GreenPrimary,
@@ -142,9 +144,9 @@ fun AddRegistroConsumoDialog(
                     val porcionesVal = porciones.toDoubleOrNull()
                     val valoracionVal = valoracion.toIntOrNull()
                     when {
-                        selectedPlato == null -> errorMsg = "Debes seleccionar un plato"
-                        porcionesVal == null || porcionesVal < 0.1 || porcionesVal > 10 -> errorMsg = "Porciones debe ser un número entre 0.1 y 10"
-                        valoracion.isNotBlank() && (valoracionVal == null || valoracionVal < 1 || valoracionVal > 5) -> errorMsg = "Valoración debe ser un número entre 1 y 5"
+                        selectedPlato == null -> errorMsg = context.getString(R.string.dialog_error_sin_plato)
+                        porcionesVal == null || porcionesVal < 0.1 || porcionesVal > 10 -> errorMsg = context.getString(R.string.dialog_error_porciones)
+                        valoracion.isNotBlank() && (valoracionVal == null || valoracionVal < 1 || valoracionVal > 5) -> errorMsg = context.getString(R.string.dialog_error_valoracion)
                         else -> {
                             errorMsg = null
                             onConfirm(
@@ -162,7 +164,7 @@ fun AddRegistroConsumoDialog(
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Guardar", color = Color.White)
+                Text(stringResource(R.string.dialog_boton_guardar), color = Color.White)
             }
         },
         dismissButton = {
@@ -172,7 +174,7 @@ fun AddRegistroConsumoDialog(
                     contentColor = GreenPrimary
                 )
             ) {
-                Text("Cancelar")
+                Text(stringResource(R.string.dialog_boton_cancelar))
             }
         }
     )

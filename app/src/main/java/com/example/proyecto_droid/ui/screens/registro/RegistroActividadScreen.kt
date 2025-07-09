@@ -38,6 +38,8 @@ import android.widget.Toast
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
+import androidx.compose.ui.res.stringResource
+import com.example.proyecto_droid.R
 
 fun formatearFecha(fechaIso: String?): String {
     if (fechaIso == null) return "-"
@@ -130,7 +132,7 @@ fun RegistroActividadScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Registros de Actividad",
+                text = stringResource(R.string.titulo_registros_actividad),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -147,7 +149,7 @@ fun RegistroActividadScreen(
                 } else {
                     Icon(
                         Icons.Default.Download,
-                        contentDescription = "Exportar PDF",
+                        contentDescription = stringResource(R.string.exportar_pdf),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -168,7 +170,7 @@ fun RegistroActividadScreen(
         ) {
             Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Agregar Registro de Actividad", color = Color.White)
+            Text(stringResource(R.string.agregar_registro_actividad), color = Color.White)
         }
         
         Spacer(modifier = Modifier.height(16.dp))
@@ -185,7 +187,7 @@ fun RegistroActividadScreen(
                 ) {
                     Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Compartir PDF", color = Color.White)
+                    Text(stringResource(R.string.compartir_pdf), color = Color.White)
                 }
                 Button(
                     onClick = {
@@ -204,7 +206,7 @@ fun RegistroActividadScreen(
                 ) {
                     Icon(Icons.Default.Visibility, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Abrir PDF", color = Color.White)
+                    Text(stringResource(R.string.abrir_pdf), color = Color.White)
                 }
             }
         }

@@ -1,3 +1,59 @@
 <resources>
     <string name="app_name">Vida Sana UCSC</string>
+
+    <!-- PANTALLA DESAFIOS -->
+    <string name="titulo_objetivos_semanales">¿Cuáles son tus objetivos para la semana?</string>
+    <string name="subtitulo_objetivos_semanales">Selecciona uno o más para sugerirte desafíos semanales</string>
+    <string name="titulo_objetivos_diarios">¿Cuáles son tus objetivos para hoy?</string>
+    <string name="subtitulo_objetivos_diarios">Selecciona uno o más para sugerirte desafíos diarios</string>
+    <string name="boton_aceptar">Aceptar</string>
+    <string name="titulo_desafios_sugeridos">Desafíos sugeridos</string>
+    <string name="titulo_desafios_semanales">Desafíos Semanales</string>
+    <string name="titulo_desafios_diarios">Desafíos Diarios</string>
+    <string name="mensaje_sin_desafios">No hay desafíos para los objetivos seleccionados.</string>
+
+    <string name="objetivo_salud_cardiovascular">Mejorar salud cardiovascular</string>
+    <string name="objetivo_perder_peso">Perder peso</string>
+    <string name="objetivo_fuerza_muscular">Aumentar fuerza muscular</string>
+    <string name="objetivo_flexibilidad">Mejorar flexibilidad</string>
+    <string name="objetivo_reducir_estres">Reducir estrés</string>
+    <string name="objetivo_consistencia">Consistencia</string>
+
+
+    <!-- REGISTRO CONSUMO SCREEN  -->
+    <string name="cerrar">Cerrar</string>
+    <string name="titulo_registros_consumo">Registros de Consumo</string>
+    <string name="exportar_pdf">Exportar PDF</string>
+    <string name="compartir_pdf">Compartir PDF</string>
+    <string name="abrir_pdf">Abrir PDF</string>
+    <string name="agregar_registro">Agregar Registro de Comida</string>
+    <string name="sin_registros">No hay registros de consumo.</string>
+
+    <!-- ADD REGISTRO CONSUMO DIALOG -->
+    <string name="dialog_titulo_agregar_consumo">Agregar Registro de Comida</string>
+    <string name="dialog_label_plato">Plato:</string>
+    <string name="dialog_placeholder_selecciona_plato">Selecciona un plato</string>
+    <string name="dialog_label_porciones">Porciones</string>
+    <string name="dialog_label_valoracion">Valoración (1-5)</string>
+    <string name="dialog_label_comentario">Comentario (opcional)</string>
+    <string name="dialog_error_sin_plato">Debes seleccionar un plato</string>
+    <string name="dialog_error_porciones">Porciones debe ser un número entre 0.1 y 10</string>
+    <string name="dialog_error_valoracion">Valoración debe ser un número entre 1 y 5</string>
+    <string name="dialog_boton_guardar">Guardar</string>
+    <string name="dialog_boton_cancelar">Cancelar</string>
+
+    <!-- REGISTRO ACTIVIDAD SCREEN -->
+    <string name="titulo_registros_actividad">Registros de Actividad</string>
+    <string name="agregar_registro_actividad">Agregar Registro de Actividad</string>
+    <string name="sin_registros_actividad">No hay registros de actividad física.</string>
+    <string name="error_guardar_registro">Error al guardar registro</string>
+    <string name="error">Error</string>
+    <string name="duracion">Duración</string>
+    <string name="intensidad">Intensidad</string>
+    <string name="tipo">Tipo</string>
+    <string name="fecha">Fecha</string>
+    <string name="comentario">Comentario</string>
+    <string name="boton_guardar">Guardar</string>
+    <string name="boton_cancelar">Cancelar</string>
+
 </resources>

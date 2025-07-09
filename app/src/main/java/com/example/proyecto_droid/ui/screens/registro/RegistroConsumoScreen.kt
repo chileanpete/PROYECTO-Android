@@ -45,7 +45,9 @@ import androidx.compose.material.icons.filled.Comment
 import java.io.File
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.FileProvider
+import com.example.proyecto_droid.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,11 +102,11 @@ fun RegistroConsumoScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Registros de Consumo",
+                text = stringResource(R.string.titulo_registros_consumo),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
-            
+
             IconButton(
                 onClick = { viewModel.exportarPDF(context) },
                 enabled = !isExporting
@@ -117,7 +119,7 @@ fun RegistroConsumoScreen(
                 } else {
                     Icon(
                         Icons.Default.Download,
-                        contentDescription = "Exportar PDF",
+                        contentDescription = stringResource(R.string.exportar_pdf),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -125,7 +127,7 @@ fun RegistroConsumoScreen(
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Botones para compartir y abrir PDF si existe
         if (pdfFile != null) {
             Row(
@@ -138,7 +140,7 @@ fun RegistroConsumoScreen(
                 ) {
                     Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Compartir PDF", color = Color.White)
+                    Text(stringResource(R.string.compartir_pdf), color = Color.White)
                 }
                 Button(
                     onClick = {
@@ -157,13 +159,13 @@ fun RegistroConsumoScreen(
                 ) {
                     Icon(Icons.Default.Visibility, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Abrir PDF", color = Color.White)
+                    Text(stringResource(R.string.abrir_pdf), color = Color.White)
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Botón para agregar registro
         Button(
             onClick = { showAddDialog = true },
@@ -176,11 +178,11 @@ fun RegistroConsumoScreen(
         ) {
             Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Agregar Registro de Comida", color = Color.White)
+            Text(stringResource(R.string.agregar_registro), color = Color.White)
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
+
         // Lista de registros
         when (val state = uiState) {
             is RegistroConsumoUiState.Loading -> {
@@ -198,7 +200,7 @@ fun RegistroConsumoScreen(
                 val registros = (state as RegistroConsumoUiState.Success).registros
                 if (registros.isEmpty()) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text("No hay registros de consumo.")
+                        Text(stringResource(R.string.sin_registros))
                     }
                 } else {
                     LazyColumn(
@@ -220,7 +222,7 @@ fun RegistroConsumoScreen(
             ) {
                 Icon(Icons.Default.Download, contentDescription = null, tint = Color.White)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Compartir PDF", color = Color.White)
+                Text(stringResource(R.string.compartir_pdf), color = Color.White)
             }
         }
     }
@@ -236,7 +238,7 @@ fun RegistroConsumoScreen(
             modifier = Modifier.padding(16.dp),
             action = {
                 TextButton(onClick = { viewModel.limpiarErroresExportacion() }) {
-                    Text("Cerrar")
+                    Text(stringResource(R.string.cerrar))
                 }
             }
         ) { Text(exportError ?: "") }
@@ -263,7 +265,7 @@ fun RegistroConsumoScreen(
             }
         )
     }
-} 
+}
 
 @Composable
 fun RegistroConsumoCard(registro: com.example.proyecto_droid.model.RegistroConsumo) {
@@ -319,4 +321,4 @@ fun RegistroConsumoCard(registro: com.example.proyecto_droid.model.RegistroConsu
             }
         }
     }
-} 
+}
