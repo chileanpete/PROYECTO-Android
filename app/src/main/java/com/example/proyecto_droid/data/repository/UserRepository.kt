@@ -1,35 +1,33 @@
 package com.example.proyecto_droid.data.repository
 
 import android.content.Context
-import com.example.proyecto_droid.data.local.AppDatabase
+import com.example.proyecto_droid.data.local.AuthManager
 import com.example.proyecto_droid.data.local.SessionManager
-import com.example.proyecto_droid.data.local.entity.UserEntity
 import com.example.proyecto_droid.data.model.User
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
-import java.security.MessageDigest
+import kotlinx.coroutines.flow.first
 
 class UserRepository(context: Context) {
     
-    private val userDao = AppDatabase.getDatabase(context).userDao()
     private val sessionManager = SessionManager(context)
+    private val authManager = AuthManager(context)
+    private val remoteUserRepository = RemoteUserRepository(context)
     
     suspend fun registerUser(user: User): Result<User> {
         return try {
-            // Verificar si el usuario ya existe
-            val existingUser = userDao.userExists(user.email)
-            if (existingUser > 0) {
-                return Result.failure(Exception("El usuario ya existe"))
+            // Registrar usuario exclusivamente en la API de Laravel
+            val apiResult = remoteUserRepository.registerUser(user)
+            
+            if (apiResult.isSuccess) {
+                val registeredUser = apiResult.getOrNull()!!
+                
+                // Guardar sesión local
+                sessionManager.saveUserSession(registeredUser.email, "${registeredUser.nombre} ${registeredUser.apellidos}")
+                
+                Result.success(registeredUser)
+            } else {
+                Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Error en el registro"))
             }
-            
-            // Guardar usuario en la base de datos
-            val userEntity = UserEntity.fromUser(user)
-            userDao.insertUser(userEntity)
-            
-            // Guardar sesión
-            sessionManager.saveUserSession(user.email, "${user.nombre} ${user.apellidos}", "1")
-            
-            Result.success(user)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -37,26 +35,21 @@ class UserRepository(context: Context) {
     
     suspend fun loginUser(email: String, password: String): Result<User> {
         return try {
-            val hashedPassword = hashPassword(password)
+            // Login exclusivamente en la API de Laravel
+            val apiResult = remoteUserRepository.loginUser(email, password)
             
-            // Primero intentar con la contraseña hasheada
-            var userEntity = userDao.loginUser(email, hashedPassword)
-            
-            // Si no funciona, intentar con la contraseña sin hashear (para usuarios registrados antes del fix)
-            if (userEntity == null) {
-                userEntity = userDao.loginUser(email, password)
-            }
-            
-            if (userEntity != null) {
-                // Actualizar último login
-                userDao.updateLastLogin(email, System.currentTimeMillis())
+            if (apiResult.isSuccess) {
+                val (user, token) = apiResult.getOrNull()!!
                 
-                // Guardar sesión
-                sessionManager.saveUserSession(email, "${userEntity.nombre} ${userEntity.apellidos}", "1")
+                // Guardar datos de autenticación
+                authManager.saveAuthData(token, user.id ?: 0, user.email)
                 
-                Result.success(userEntity.toUser())
+                // Guardar sesión local
+                sessionManager.saveUserSession(email, "${user.nombre} ${user.apellidos}")
+                
+                Result.success(user)
             } else {
-                Result.failure(Exception("Credenciales inválidas"))
+                Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Credenciales inválidas"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -65,6 +58,7 @@ class UserRepository(context: Context) {
     
     suspend fun logoutUser() {
         sessionManager.clearUserSession()
+        authManager.clearAuthData()
     }
     
     fun isUserLoggedIn(): Flow<Boolean> {
@@ -79,52 +73,76 @@ class UserRepository(context: Context) {
         return sessionManager.userName
     }
     
-    suspend fun getLastLoggedInUser(): User? {
-        return userDao.getLastLoggedInUser()?.toUser()
+    suspend fun getCurrentUserProfile(): Result<User> {
+        return try {
+            val token = authManager.authToken.first()
+            val userId = authManager.userId.first()
+            
+            if (token != null && userId != null) {
+                remoteUserRepository.getUserProfile(userId, token)
+            } else {
+                Result.failure(Exception("Usuario no autenticado"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
     
-    suspend fun getUserByEmail(email: String): User? {
-        return userDao.getUserByEmail(email)?.toUser()
+    suspend fun updateUser(user: User): Result<User> {
+        return try {
+            val token = authManager.authToken.first()
+            val userId = authManager.userId.first()
+            
+            if (token != null && userId != null) {
+                val apiResult = remoteUserRepository.updateUserProfile(userId, user, token)
+                
+                if (apiResult.isSuccess) {
+                    val updatedUser = apiResult.getOrNull()!!
+                    sessionManager.updateUserName("${updatedUser.nombre} ${updatedUser.apellidos}")
+                    Result.success(updatedUser)
+                } else {
+                    Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Error al actualizar perfil"))
+                }
+            } else {
+                Result.failure(Exception("Usuario no autenticado"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
     
-    suspend fun updateUser(user: User) {
-        val userEntity = UserEntity.fromUser(user)
-        userDao.updateUser(userEntity)
-        
-        // Actualizar nombre en sesión si es necesario
-        sessionManager.updateUserName("${user.nombre} ${user.apellidos}")
-    }
-    
-    suspend fun deleteUser(email: String) {
-        userDao.deleteUser(email)
-        sessionManager.clearUserSession()
-    }
-    
-    suspend fun clearAllUsers() {
-        userDao.deleteAllUsers()
-        sessionManager.clearUserSession()
-    }
-    
-    fun getAllUsers(): Flow<List<User>> {
-        return userDao.getAllUsers().map { entities ->
-            entities.map { entity -> entity.toUser() }
+    suspend fun deleteUser(): Result<Unit> {
+        return try {
+            val token = authManager.authToken.first()
+            val userId = authManager.userId.first()
+            
+            if (token != null && userId != null) {
+                val apiResult = remoteUserRepository.deleteUser(userId, token)
+                
+                if (apiResult.isSuccess) {
+                    sessionManager.clearUserSession()
+                    authManager.clearAuthData()
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Error al eliminar usuario"))
+                }
+            } else {
+                Result.failure(Exception("Usuario no autenticado"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
     
     fun getNivelesActividad(): List<String> {
-        return listOf("Sedentario", "Ligero", "Moderado", "Activo", "Muy activo")
+        return listOf("sedentario", "ligero", "moderado", "activo", "muy_activo")
     }
     
     fun getObjetivos(): List<String> {
-        return listOf("Perder peso", "Mantener peso", "Ganar peso", "Ganar músculo", "Mejorar salud")
+        return listOf("perder_peso", "mantener_peso", "ganar_peso", "ganar_musculo")
     }
     
     fun getGeneros(): List<String> {
         return listOf("M", "F", "O")
-    }
-    
-    private fun hashPassword(password: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(password.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
     }
 } 

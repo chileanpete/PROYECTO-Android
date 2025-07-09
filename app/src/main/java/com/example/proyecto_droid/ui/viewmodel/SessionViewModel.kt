@@ -63,8 +63,13 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
                 isLoggedIn.collect { loggedIn ->
                     userEmail.collect { email ->
                         userName.collect { name ->
-                            val currentUser = if (loggedIn && email != null) {
-                                userRepository.getUserByEmail(email)
+                            val currentUser = if (loggedIn) {
+                                // Intentar obtener el perfil del usuario desde la API
+                                try {
+                                    userRepository.getCurrentUserProfile().getOrNull()
+                                } catch (e: Exception) {
+                                    null
+                                }
                             } else null
                             
                             _uiState.value = SessionUiState(

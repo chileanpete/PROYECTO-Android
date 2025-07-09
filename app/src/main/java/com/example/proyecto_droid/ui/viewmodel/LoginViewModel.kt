@@ -26,7 +26,6 @@ sealed class LoginEvent {
     object TogglePasswordVisibility : LoginEvent()
     object Login : LoginEvent()
     object ClearError : LoginEvent()
-    object ClearDatabase : LoginEvent()
 }
 
 class LoginViewModel(application: Application) : AndroidViewModel(application) {
@@ -54,9 +53,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             }
             is LoginEvent.ClearError -> {
                 _uiState.value = _uiState.value.copy(error = null)
-            }
-            is LoginEvent.ClearDatabase -> {
-                clearDatabase()
             }
         }
     }
@@ -95,21 +91,6 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = state.copy(
                     isLoading = false,
                     error = e.message ?: "Error inesperado"
-                )
-            }
-        }
-    }
-
-    fun clearDatabase() {
-        viewModelScope.launch {
-            try {
-                userRepository.clearAllUsers()
-                _uiState.value = _uiState.value.copy(
-                    error = "Base de datos limpiada. Puedes registrarte de nuevo."
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    error = "Error al limpiar la base de datos: ${e.message}"
                 )
             }
         }
