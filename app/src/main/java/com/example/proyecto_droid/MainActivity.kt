@@ -33,7 +33,11 @@ import com.example.proyecto_droid.ui.screens.HomeScreen
 import com.example.proyecto_droid.ui.screens.NutritionScreen
 import com.example.proyecto_droid.ui.screens.ExerciseScreen
 import com.example.proyecto_droid.ui.screens.ProfileScreen
+import com.example.proyecto_droid.ui.screens.EditProfileScreen
+import com.example.proyecto_droid.ui.screens.EditPreferencesScreen
+import com.example.proyecto_droid.ui.screens.ChangePasswordScreen
 import com.example.proyecto_droid.ui.viewmodel.SessionViewModel
+import com.example.proyecto_droid.ui.viewmodel.SessionEvent
 import com.example.proyecto_droid.ui.theme.BackgroundLight
 import com.example.proyecto_droid.ui.theme.GreenPrimary
 import com.example.proyecto_droid.ui.theme.LightGrayText
@@ -62,20 +66,25 @@ fun AppNavHost(navController: NavHostController) {
     val sessionViewModel: SessionViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
     val sessionState by sessionViewModel.uiState.collectAsStateWithLifecycle()
     
-    // Observar cambios en el estado de sesión
-    LaunchedEffect(sessionState.isLoggedIn) {
-        if (sessionState.isLoggedIn && !sessionState.isLoading) {
-            navController.navigate("main") {
-                popUpTo("login") { inclusive = true }
-            }
-        } else if (!sessionState.isLoggedIn && !sessionState.isLoading) {
-            navController.navigate("login") {
-                popUpTo(0) { inclusive = true }
+    // Observar cambios en el estado de sesión solo cuando no está cargando
+    LaunchedEffect(sessionState.isLoggedIn, sessionState.isLoading) {
+        if (!sessionState.isLoading) {
+            if (sessionState.isLoggedIn) {
+                navController.navigate("main") {
+                    popUpTo("splash") { inclusive = true }
+                }
+            } else {
+                navController.navigate("login") {
+                    popUpTo("splash") { inclusive = true }
+                }
             }
         }
     }
     
-    NavHost(navController = navController, startDestination = "login") {
+    NavHost(navController = navController, startDestination = "splash") {
+        composable("splash") { 
+            SplashScreen() 
+        }
         composable("login") { 
             LoginScreen(navController, sessionViewModel) 
         }
@@ -87,6 +96,54 @@ fun AppNavHost(navController: NavHostController) {
         }
         composable("main") { 
             MainScaffold(sessionViewModel)
+        }
+    }
+}
+
+@Composable
+fun SplashScreen() {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(GreenPrimary),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Logo o icono de la app
+            Icon(
+                painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                contentDescription = "Logo",
+                modifier = Modifier.size(120.dp),
+                tint = Color.White
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            Text(
+                text = "Vida Sana UCSC",
+                fontSize = 28.sp,
+                color = Color.White,
+                style = androidx.compose.material3.MaterialTheme.typography.headlineMedium
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            CircularProgressIndicator(
+                color = Color.White,
+                modifier = Modifier.size(32.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = "Cargando...",
+                fontSize = 16.sp,
+                color = Color.White.copy(alpha = 0.8f),
+                style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
@@ -157,7 +214,35 @@ fun MainScaffold(sessionViewModel: SessionViewModel) {
             composable("home") { HomeScreen(navController, sessionViewModel) }
             composable("nutrition") { NutritionScreen() }
             composable("exercise") { ExerciseScreen() }
-            composable("profile") { ProfileScreen() }
+            composable("profile") { 
+                ProfileScreen(
+                    onNavigateToEditProfile = { navController.navigate("edit_profile") },
+                    onNavigateToEditPreferences = { navController.navigate("edit_preferences") },
+                    onNavigateToChangePassword = { navController.navigate("change_password") },
+                    onLogout = { 
+                        // Usar sessionViewModel para hacer logout
+                        sessionViewModel.handleEvent(SessionEvent.Logout)
+                    }
+                )
+            }
+            composable("edit_profile") {
+                EditProfileScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onSaveClick = { navController.popBackStack() }
+                )
+            }
+            composable("edit_preferences") {
+                EditPreferencesScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onSaveClick = { navController.popBackStack() }
+                )
+            }
+            composable("change_password") {
+                ChangePasswordScreen(
+                    onBackClick = { navController.popBackStack() },
+                    onSaveClick = { navController.popBackStack() }
+                )
+            }
         }
     }
 }
