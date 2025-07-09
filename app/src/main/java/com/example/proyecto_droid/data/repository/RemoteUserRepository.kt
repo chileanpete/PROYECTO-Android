@@ -82,6 +82,7 @@ class RemoteUserRepository(private val context: Context) {
     suspend fun getUserProfile(userId: Int, token: String): Result<User> {
         return withContext(Dispatchers.IO) {
             try {
+                // Usar la ruta autenticada correcta
                 val response = apiService.getUser(userId, "Bearer $token")
                 
                 if (response.success && response.data != null) {
@@ -142,6 +143,38 @@ class RemoteUserRepository(private val context: Context) {
                 when (e.code()) {
                     401 -> Result.failure(Exception("Token no válido"))
                     404 -> Result.failure(Exception("Usuario no encontrado"))
+                    else -> Result.failure(Exception("Error del servidor: ${e.code()}"))
+                }
+            } catch (e: IOException) {
+                Result.failure(Exception("Error de conexión: ${e.message}"))
+            } catch (e: Exception) {
+                Result.failure(Exception("Error inesperado: ${e.message}"))
+            }
+        }
+    }
+    
+    suspend fun changePassword(userId: Int, currentPassword: String, newPassword: String, token: String): Result<Unit> {
+        return withContext(Dispatchers.IO) {
+            try {
+                val requestBody = mapOf(
+                    "password_actual" to currentPassword,
+                    "password_nuevo" to newPassword,
+                    "password_nuevo_confirmation" to newPassword
+                )
+                
+                val response = apiService.changePassword(userId, requestBody, "Bearer $token")
+                
+                if (response.success) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(response.message ?: "Error al cambiar contraseña"))
+                }
+            } catch (e: HttpException) {
+                when (e.code()) {
+                    401 -> Result.failure(Exception("Token no válido"))
+                    403 -> Result.failure(Exception("Contraseña actual incorrecta"))
+                    404 -> Result.failure(Exception("Usuario no encontrado"))
+                    422 -> Result.failure(Exception("Datos de validación incorrectos"))
                     else -> Result.failure(Exception("Error del servidor: ${e.code()}"))
                 }
             } catch (e: IOException) {
