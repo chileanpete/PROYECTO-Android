@@ -3,8 +3,8 @@ package com.example.proyecto_droid.data.remote
 object ApiConfig {
     
     // URLs para diferentes entornos
-    const val BASE_URL_EMULATOR = "http://10.0.2.2:8000/api/"
-    const val BASE_URL_DEVICE = "http://192.168.1.100:8000/api/" // Cambiar por tu IP local
+    const val BASE_URL_EMULATOR = "http://10.0.2.2:8000/api/" // IP especial para emulador Android
+    const val BASE_URL_DEVICE = "http://192.168.0.6:8000/api/" // Cambiar por tu IP local
     const val BASE_URL_PRODUCTION = "https://tu-dominio.com/api/" // Cambiar por tu dominio de producción
     
     // Configuración de entorno

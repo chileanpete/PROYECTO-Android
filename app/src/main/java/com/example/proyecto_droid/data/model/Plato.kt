@@ -1,25 +1,62 @@
 package com.example.proyecto_droid.data.model
 
-import kotlinx.serialization.Serializable
+import com.google.gson.annotations.SerializedName
 
-@Serializable
+/**
+ * Modelo para Plato de comida
+ */
 data class Plato(
-    val id: Int,
-    val idLugar:Int,
-    val idCategoria:Int,
-    val nombrePlato:String,
-    val descripcionPlato: String,
-    val precioPlato: Double,
-    val caloriasPlato: Int,
-    val protePlato:Double,
-    val carbPlato: Double,
-    val grasaPlato: Double,
-    val fibraPlato: Double,
-    val azucarPlato: Double,
-    val sodioPlato: Double,
-    val disponibilidadPlato: Boolean,
-    val esVegetariano: Boolean,
-    val esVegano: Boolean,
-    val sinGluten: Boolean,
-    val imagenUrl: String
-)
+    @SerializedName("id")
+    val id: Int = 0,
+    
+    @SerializedName("id_plato")
+    val idPlato: Int? = null,
+    
+    @SerializedName("nombre")
+    val nombre: String,
+    
+    @SerializedName("descripcion")
+    val descripcion: String? = null,
+    
+    @SerializedName("precio")
+    val precio: String? = null,
+    
+    @SerializedName("calorias_por_porcion")
+    val caloriasPorPorcion: String? = null,
+    
+    @SerializedName("proteinas_g")
+    val proteinasG: String? = null,
+    
+    @SerializedName("carbohidratos_g")
+    val carbohidratosG: String? = null,
+    
+    @SerializedName("grasas_g")
+    val grasasG: String? = null,
+    
+    @SerializedName("es_vegetariano")
+    val esVegetariano: Boolean? = null,
+    
+    @SerializedName("es_vegano")
+    val esVegano: Boolean? = null,
+    
+    @SerializedName("sin_gluten")
+    val sinGluten: Boolean? = null,
+    
+    @SerializedName("imagen_url")
+    val imagenUrl: String? = null,
+    
+    @SerializedName("id_lugar")
+    val idLugar: Int? = null,
+    
+    @SerializedName("id_categoria")
+    val idCategoria: Int? = null,
+    
+    @SerializedName("lugar")
+    val lugar: LugarComida? = null,
+    
+    @SerializedName("categoria")
+    val categoria: CategoriaComida? = null,
+    
+    @SerializedName("activo")
+    val activo: Boolean = true
+) 

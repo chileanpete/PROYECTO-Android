@@ -4,7 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto_droid.data.model.User
-import com.example.proyecto_droid.data.repository.UserRepository
+import com.example.proyecto_droid.data.repository.UnifiedUserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -55,7 +55,7 @@ sealed class RegisterEvent {
 
 class RegisterViewModel(application: Application) : AndroidViewModel(application) {
     
-    private val userRepository = UserRepository(application)
+    private val userRepository = UnifiedUserRepository(application)
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()

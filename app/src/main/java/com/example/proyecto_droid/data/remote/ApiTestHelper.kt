@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.proyecto_droid.data.model.RegisterRequest
 import com.example.proyecto_droid.data.model.User
+import com.example.proyecto_droid.data.network.UnifiedRetrofitClient
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -22,7 +23,7 @@ object ApiTestHelper {
             try {
                 Log.d(TAG, "Iniciando prueba de registro...")
                 
-                val apiService = RetrofitClient.createApiService(context)
+                val apiService = UnifiedRetrofitClient.getApiService(context)
                 
                 // Datos de prueba
                 val testUser = RegisterRequest(
@@ -66,7 +67,7 @@ object ApiTestHelper {
             try {
                 Log.d(TAG, "Iniciando prueba de login...")
                 
-                val apiService = RetrofitClient.createApiService(context)
+                val apiService = UnifiedRetrofitClient.getApiService(context)
                 val loginRequest = com.example.proyecto_droid.data.model.LoginRequest(email, password)
                 
                 val response = apiService.login(loginRequest)
@@ -95,7 +96,7 @@ object ApiTestHelper {
                 Log.d(TAG, "Verificando conectividad...")
                 Log.d(TAG, "URL base: ${ApiConfig.getBaseUrl()}")
                 
-                val apiService = RetrofitClient.createApiService(context)
+                val apiService = UnifiedRetrofitClient.getApiService(context)
                 
                 // Intentar hacer una petición simple
                 val response = apiService.login(

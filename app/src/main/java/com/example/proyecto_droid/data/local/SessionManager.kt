@@ -18,6 +18,7 @@ class SessionManager(private val context: Context) {
         private val IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
         private val USER_EMAIL = stringPreferencesKey("user_email")
         private val USER_NAME = stringPreferencesKey("user_name")
+        private val USER_ID = stringPreferencesKey("user_id")
     }
     
     val isLoggedIn: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -31,12 +32,17 @@ class SessionManager(private val context: Context) {
     val userName: Flow<String?> = context.dataStore.data.map { preferences ->
         preferences[USER_NAME]
     }
+
+    val userId: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[USER_ID]
+    }
     
-    suspend fun saveUserSession(email: String, name: String) {
+    suspend fun saveUserSession(email: String, name: String, id: String) {
         context.dataStore.edit { preferences ->
             preferences[IS_LOGGED_IN] = true
             preferences[USER_EMAIL] = email
             preferences[USER_NAME] = name
+            preferences[USER_ID] = id
         }
     }
     
@@ -45,12 +51,19 @@ class SessionManager(private val context: Context) {
             preferences[IS_LOGGED_IN] = false
             preferences.remove(USER_EMAIL)
             preferences.remove(USER_NAME)
+            preferences.remove(USER_ID)
         }
     }
     
     suspend fun updateUserName(name: String) {
         context.dataStore.edit { preferences ->
             preferences[USER_NAME] = name
+        }
+    }
+
+    suspend fun saveUserId(idUsuario: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[USER_ID] = idUsuario.toString()
         }
     }
 } 
