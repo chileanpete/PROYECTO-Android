@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+
 class DesafiosViewModel : ViewModel() {
     private val _desafios = MutableStateFlow<List<Desafio>>(emptyList())
     val desafios: StateFlow<List<Desafio>> = _desafios
