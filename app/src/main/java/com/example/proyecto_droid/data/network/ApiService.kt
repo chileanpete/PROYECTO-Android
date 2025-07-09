@@ -21,6 +21,6 @@ interface ApiService {
         @Query("id_usuario") idUsuario: Int
     ): Response<ApiResponse<List<RegistroActividad>>>
 
-    @GET("api/actividad-fisica/exportar-pdf")
-    suspend fun exportarPDFActividad(): Response<com.example.proyecto_droid.data.network.services.ApiResponse<com.example.proyecto_droid.data.network.services.ExportarPDFResponse>>
+    @GET("api/exportacion/actividad-pdf")
+    suspend fun exportarPDFActividad(@Query("id_usuario") idUsuario: Int): Response<com.example.proyecto_droid.data.network.services.ApiResponse<com.example.proyecto_droid.data.network.services.ExportarPDFResponse>>
 } 

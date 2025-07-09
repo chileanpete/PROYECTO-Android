@@ -52,15 +52,17 @@ class RegistroActividadViewModel : ViewModel() {
         }
     }
 
-    fun exportarPDF(context: Context, idUsuario: Int = 1) {
+    fun exportarPDF(context: Context) {
         isExporting.value = true
         exportError.value = null
         pdfFile.value = null
+        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val idUsuario = sharedPreferences.getInt("user_id", 1)
         Log.d("RegistroActividadVM", "[exportarPDF] Iniciando exportación de PDF para usuario $idUsuario")
         viewModelScope.launch {
             try {
                 Log.d("RegistroActividadVM", "[exportarPDF] Llamando a RetrofitClient.apiService.exportarPDFActividad()")
-                val response = RetrofitClient.apiService.exportarPDFActividad()
+                val response = RetrofitClient.apiService.exportarPDFActividad(idUsuario)
                 Log.d("RegistroActividadVM", "[exportarPDF] Respuesta recibida: ${response.code()} ${response.message()}")
                 if (response.isSuccessful && response.body()?.success == true) {
                     val pdfData = response.body()?.data

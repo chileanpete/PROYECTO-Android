@@ -110,8 +110,9 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
         pdfFile.value = null
         viewModelScope.launch {
             try {
-                Log.d("RegistroConsumoVM", "Iniciando exportación de PDF...")
-                val response = service.exportarPDF()
+                val idUsuario = getUserId()
+                Log.d("RegistroConsumoVM", "Iniciando exportación de PDF para usuario $idUsuario...")
+                val response = service.exportarPDF(idUsuario)
                 Log.d("RegistroConsumoVM", "Respuesta recibida: ${response.code()}")
                 if (response.isSuccessful && response.body()?.success == true) {
                     val pdfData = response.body()?.data
