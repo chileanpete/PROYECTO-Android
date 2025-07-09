@@ -19,6 +19,7 @@ import com.example.proyecto_droid.model.Plato
 import com.example.proyecto_droid.ui.theme.GreenPrimary
 import androidx.compose.ui.res.stringResource
 import com.example.proyecto_droid.R
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +28,7 @@ fun AddRegistroConsumoDialog(
     onDismiss: () -> Unit,
     onConfirm: (Plato, Double, Int?, String?) -> Unit
 ) {
+    val context = LocalContext.current
     var selectedPlato by remember { mutableStateOf<Plato?>(null) }
     var expanded by remember { mutableStateOf(false) }
     var porciones by remember { mutableStateOf("1.0") }
