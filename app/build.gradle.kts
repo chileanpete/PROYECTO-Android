@@ -41,6 +41,7 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.room.common.jvm)
     val navVersion = "2.8.9"
     val roomVersion = "2.6.0"
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")

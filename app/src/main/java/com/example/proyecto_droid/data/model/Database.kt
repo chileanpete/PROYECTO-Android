@@ -1,11 +1,8 @@
 package com.example.proyecto_droid.data.model
-
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-
-
 @Database(entities = [Categoria::class, Lugar::class,Plato::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
