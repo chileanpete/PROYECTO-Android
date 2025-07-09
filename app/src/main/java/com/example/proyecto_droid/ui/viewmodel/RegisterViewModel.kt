@@ -24,14 +24,14 @@ data class RegisterUiState(
     val pesoKg: String = "",
     val nivelActividad: String = "",
     val objetivoPrincipal: String = "",
-    val preferenciasAlimentarias: String = "",
-    val alergias: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
     val isRegistrationSuccessful: Boolean = false,
     val nivelesActividad: List<String> = emptyList(),
     val objetivos: List<String> = emptyList(),
-    val generos: List<String> = emptyList()
+    val generos: List<String> = emptyList(),
+    val alturas: List<String> = (100..250).map { "${it} cm" },
+    val pesos: List<String> = (30..200).map { "${it} kg" }
 )
 
 sealed class RegisterEvent {
@@ -46,8 +46,6 @@ sealed class RegisterEvent {
     data class UpdatePeso(val peso: String) : RegisterEvent()
     data class UpdateNivelActividad(val nivel: String) : RegisterEvent()
     data class UpdateObjetivoPrincipal(val objetivo: String) : RegisterEvent()
-    data class UpdatePreferenciasAlimentarias(val preferencias: String) : RegisterEvent()
-    data class UpdateAlergias(val alergias: String) : RegisterEvent()
     object NextStep : RegisterEvent()
     object PreviousStep : RegisterEvent()
     object RegisterUser : RegisterEvent()
@@ -108,12 +106,6 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
             is RegisterEvent.UpdateObjetivoPrincipal -> {
                 _uiState.value = _uiState.value.copy(objetivoPrincipal = event.objetivo)
             }
-            is RegisterEvent.UpdatePreferenciasAlimentarias -> {
-                _uiState.value = _uiState.value.copy(preferenciasAlimentarias = event.preferencias)
-            }
-            is RegisterEvent.UpdateAlergias -> {
-                _uiState.value = _uiState.value.copy(alergias = event.alergias)
-            }
             is RegisterEvent.NextStep -> {
                 if (validateCurrentStep()) {
                     _uiState.value = _uiState.value.copy(
@@ -156,12 +148,12 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     private fun validateStep1(): String? {
         val state = _uiState.value
         return when {
-            state.email.isBlank() -> "El email es obligatorio"
-            !isValidEmail(state.email) -> "Formato de email inválido"
-            state.password.length < 6 -> "La contraseña debe tener al menos 6 caracteres"
-            state.password != state.confirmPassword -> "Las contraseñas no coinciden"
+            state.email.isBlank() -> "El correo electrónico es obligatorio"
+            !isValidEmail(state.email) -> "Formato de correo electrónico inválido"
             state.nombre.isBlank() -> "El nombre es obligatorio"
             state.apellidos.isBlank() -> "Los apellidos son obligatorios"
+            state.password.length < 6 -> "La contraseña debe tener al menos 6 caracteres"
+            state.password != state.confirmPassword -> "Las contraseñas no coinciden"
             else -> null
         }
     }
@@ -171,8 +163,8 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         return when {
             state.fechaNacimiento.isBlank() -> "La fecha de nacimiento es obligatoria"
             state.genero.isBlank() -> "El género es obligatorio"
-            state.alturaCm.toIntOrNull() == null || state.alturaCm.toInt() <= 0 -> "La altura debe ser un número válido"
-            state.pesoKg.toDoubleOrNull() == null || state.pesoKg.toDouble() <= 0 -> "El peso debe ser un número válido"
+            state.alturaCm.isBlank() -> "La altura es obligatoria"
+            state.pesoKg.isBlank() -> "El peso es obligatorio"
             else -> null
         }
     }
@@ -180,7 +172,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
     private fun validateStep3(): String? {
         val state = _uiState.value
         return when {
-            state.nivelActividad.isBlank() -> "El nivel de actividad es obligatorio"
+            state.nivelActividad.isBlank() -> "El nivel de actividad física es obligatorio"
             state.objetivoPrincipal.isBlank() -> "El objetivo principal es obligatorio"
             else -> null
         }
@@ -208,17 +200,17 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
             try {
                 val user = User(
                     email = state.email,
-                    passwordHash = hashPassword(state.password), // Ahora se hashea correctamente
+                    passwordHash = hashPassword(state.password),
                     nombre = state.nombre,
                     apellidos = state.apellidos,
                     fechaNacimiento = state.fechaNacimiento,
                     genero = state.genero,
-                    alturaCm = state.alturaCm.toIntOrNull() ?: 0,
-                    pesoKg = state.pesoKg.toDoubleOrNull() ?: 0.0,
+                    alturaCm = extractNumber(state.alturaCm),
+                    pesoKg = extractNumber(state.pesoKg).toDouble(),
                     nivelActividad = state.nivelActividad,
                     objetivoPrincipal = state.objetivoPrincipal,
-                    preferenciasAlimentarias = state.preferenciasAlimentarias,
-                    alergias = state.alergias
+                    preferenciasAlimentarias = null, // Se configurará después en el perfil
+                    alergias = null // Se configurará después en el perfil
                 )
 
                 val result = userRepository.registerUser(user)
@@ -240,9 +232,14 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
             } catch (e: Exception) {
                 _uiState.value = state.copy(
                     isLoading = false,
-                    error = e.message ?: "Error inesperado"
+                    error = e.message ?: "Error inesperado durante el registro"
                 )
             }
         }
+    }
+    
+    // Función auxiliar para extraer números de strings como "175 cm" o "70 kg"
+    fun extractNumber(value: String): Int {
+        return value.filter { it.isDigit() }.toIntOrNull() ?: 0
     }
 } 

@@ -33,8 +33,8 @@ data class UserEntity(
             pesoKg = pesoKg,
             nivelActividad = nivelActividad,
             objetivoPrincipal = objetivoPrincipal,
-            preferenciasAlimentarias = preferenciasAlimentarias ?: "",
-            alergias = alergias ?: ""
+            preferenciasAlimentarias = preferenciasAlimentarias,
+            alergias = alergias
         )
     }
     
@@ -51,8 +51,8 @@ data class UserEntity(
                 pesoKg = user.pesoKg,
                 nivelActividad = user.nivelActividad,
                 objetivoPrincipal = user.objetivoPrincipal,
-                preferenciasAlimentarias = user.preferenciasAlimentarias.ifEmpty { null },
-                alergias = user.alergias.ifEmpty { null }
+                preferenciasAlimentarias = user.preferenciasAlimentarias?.takeIf { it.isNotBlank() },
+                alergias = user.alergias?.takeIf { it.isNotBlank() }
             )
         }
     }

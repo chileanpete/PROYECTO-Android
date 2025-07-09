@@ -207,20 +207,7 @@ fun LoginScreen(
                 )
             }
             
-            // Botón temporal para desarrollo - limpiar BD
-            Spacer(modifier = Modifier.height(16.dp))
-            Button(
-                onClick = {
-                    viewModel.clearDatabase()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp),
-                shape = RoundedCornerShape(20.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))
-            ) {
-                Text("Limpiar BD (Desarrollo)", color = Color.White, fontSize = 14.sp)
-            }
+
             
             Spacer(modifier = Modifier.height(32.dp))
         }

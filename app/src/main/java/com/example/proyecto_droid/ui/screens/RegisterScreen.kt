@@ -1,12 +1,16 @@
 package com.example.proyecto_droid.ui.screens
 
+import android.app.DatePickerDialog
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.*
@@ -28,6 +32,7 @@ import com.example.proyecto_droid.ui.viewmodel.RegisterViewModel
 import com.example.proyecto_droid.ui.viewmodel.SessionEvent
 import com.example.proyecto_droid.ui.viewmodel.SessionViewModel
 import com.example.proyecto_droid.data.model.User
+import java.util.*
 
 @Composable
 fun RegisterScreen(
@@ -55,12 +60,12 @@ fun RegisterScreen(
                 apellidos = uiState.apellidos,
                 fechaNacimiento = uiState.fechaNacimiento,
                 genero = uiState.genero,
-                alturaCm = uiState.alturaCm.toIntOrNull() ?: 0,
-                pesoKg = uiState.pesoKg.toDoubleOrNull() ?: 0.0,
+                alturaCm = viewModel.extractNumber(uiState.alturaCm),
+                pesoKg = viewModel.extractNumber(uiState.pesoKg).toDouble(),
                 nivelActividad = uiState.nivelActividad,
                 objetivoPrincipal = uiState.objetivoPrincipal,
-                preferenciasAlimentarias = uiState.preferenciasAlimentarias,
-                alergias = uiState.alergias
+                preferenciasAlimentarias = null,
+                alergias = null
             )
             
             // Actualizar la sesión con el usuario registrado
@@ -86,7 +91,7 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(32.dp))
             
-            // Título y progreso
+            // === HEADER: Título y barra de progreso ===
             Text(
                 text = "Registro - Paso ${uiState.currentStep} de 3",
                 style = MaterialTheme.typography.headlineMedium.copy(
@@ -106,28 +111,31 @@ fun RegisterScreen(
                 color = GreenPrimary,
             )
 
+            // === CONTENIDO POR PASOS ===
             when (uiState.currentStep) {
                 1 -> RegisterStep1(viewModel, uiState)
                 2 -> RegisterStep2(viewModel, uiState)
                 3 -> RegisterStep3(viewModel, uiState)
             }
             
+            // === MENSAJES DE ERROR ===
             if (uiState.error != null) {
                 Text(
                     text = uiState.error!!,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier.padding(top = 16.dp)
                 )
             }
             
             Spacer(modifier = Modifier.height(24.dp))
             
-            // Botones de navegación
+            // === BOTONES DE NAVEGACIÓN ===
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                // Botón Anterior/Cancelar
                 if (uiState.currentStep > 1) {
                     Button(
                         onClick = { viewModel.handleEvent(RegisterEvent.PreviousStep) },
@@ -152,6 +160,7 @@ fun RegisterScreen(
                     }
                 }
                 
+                // Botón Siguiente/Completar Registro
                 Button(
                     onClick = {
                         if (uiState.currentStep == 3) {
@@ -168,10 +177,14 @@ fun RegisterScreen(
                     colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
                 ) {
                     if (uiState.isLoading) {
-                        CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
+                        CircularProgressIndicator(
+                            color = Color.White, 
+                            strokeWidth = 2.dp, 
+                            modifier = Modifier.size(24.dp)
+                        )
                     } else {
                         Text(
-                            if (uiState.currentStep == 3) "Completar Registro" else "Siguiente",
+                            text = if (uiState.currentStep == 3) "Completar Registro" else "Siguiente",
                             color = Color.White,
                             fontSize = 16.sp
                         )
@@ -184,6 +197,9 @@ fun RegisterScreen(
     }
 }
 
+// ============================================================================
+// PASO 1: Información básica (Correo, Nombre, Apellido, Contraseña, Confirmar contraseña)
+// ============================================================================
 @Composable
 private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.proyecto_droid.ui.viewmodel.RegisterUiState) {
     Text(
@@ -193,6 +209,7 @@ private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.pro
         modifier = Modifier.padding(bottom = 24.dp)
     )
     
+    // Correo electrónico
     OutlinedTextField(
         value = uiState.email,
         onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateEmail(it)) },
@@ -207,6 +224,37 @@ private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.pro
     )
     Spacer(modifier = Modifier.height(12.dp))
     
+    // Nombre
+    OutlinedTextField(
+        value = uiState.nombre,
+        onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateNombre(it)) },
+        label = { Text("Nombre *") },
+        singleLine = true,
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = GreenPrimary,
+            unfocusedBorderColor = LightGrayText
+        )
+    )
+    Spacer(modifier = Modifier.height(12.dp))
+    
+    // Apellidos
+    OutlinedTextField(
+        value = uiState.apellidos,
+        onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateApellidos(it)) },
+        label = { Text("Apellidos *") },
+        singleLine = true,
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth(),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedBorderColor = GreenPrimary,
+            unfocusedBorderColor = LightGrayText
+        )
+    )
+    Spacer(modifier = Modifier.height(12.dp))
+    
+    // Contraseña
     OutlinedTextField(
         value = uiState.password,
         onValueChange = { viewModel.handleEvent(RegisterEvent.UpdatePassword(it)) },
@@ -222,6 +270,7 @@ private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.pro
     )
     Spacer(modifier = Modifier.height(12.dp))
     
+    // Confirmar contraseña
     OutlinedTextField(
         value = uiState.confirmPassword,
         onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateConfirmPassword(it)) },
@@ -235,38 +284,15 @@ private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.pro
             unfocusedBorderColor = LightGrayText
         )
     )
-    Spacer(modifier = Modifier.height(12.dp))
-    
-    OutlinedTextField(
-        value = uiState.nombre,
-        onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateNombre(it)) },
-        label = { Text("Nombre *") },
-        singleLine = true,
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = GreenPrimary,
-            unfocusedBorderColor = LightGrayText
-        )
-    )
-    Spacer(modifier = Modifier.height(12.dp))
-    
-    OutlinedTextField(
-        value = uiState.apellidos,
-        onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateApellidos(it)) },
-        label = { Text("Apellidos *") },
-        singleLine = true,
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = GreenPrimary,
-            unfocusedBorderColor = LightGrayText
-        )
-    )
 }
 
+// ============================================================================
+// PASO 2: Información personal (Fecha nacimiento, Género, Altura, Peso)
+// ============================================================================
 @Composable
 private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.proyecto_droid.ui.viewmodel.RegisterUiState) {
+    val context = LocalContext.current
+    
     Text(
         text = "Información personal",
         color = LightGrayText,
@@ -274,21 +300,61 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
         modifier = Modifier.padding(bottom = 24.dp)
     )
     
+    // === FECHA DE NACIMIENTO con DatePicker ===
+    val dateInteractionSource = remember { MutableInteractionSource() }
+    val isDatePressed by dateInteractionSource.collectIsPressedAsState()
+    
+    LaunchedEffect(isDatePressed) {
+        if (isDatePressed) {
+            // Crear DatePicker al hacer clic
+            val calendar = Calendar.getInstance()
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH)
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+            
+            DatePickerDialog(
+                context,
+                { _, selectedYear, selectedMonth, selectedDay ->
+                    val date = String.format("%04d-%02d-%02d", selectedYear, selectedMonth + 1, selectedDay)
+                    viewModel.handleEvent(RegisterEvent.UpdateFechaNacimiento(date))
+                },
+                year, month, day
+            ).show()
+        }
+    }
+    
     OutlinedTextField(
         value = uiState.fechaNacimiento,
-        onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateFechaNacimiento(it)) },
-        label = { Text("Fecha de nacimiento (YYYY-MM-DD) *") },
-        singleLine = true,
+        onValueChange = { },
+        readOnly = true,
+        label = { Text("Fecha de nacimiento *") },
+        trailingIcon = { 
+            Icon(
+                imageVector = Icons.Default.CalendarToday,
+                contentDescription = "Seleccionar fecha"
+            )
+        },
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth(),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = GreenPrimary,
             unfocusedBorderColor = LightGrayText
-        )
+        ),
+        interactionSource = dateInteractionSource
     )
     Spacer(modifier = Modifier.height(12.dp))
     
+    // === GÉNERO (Dropdown) ===
     var generoExpanded by remember { mutableStateOf(false) }
+    val generoInteractionSource = remember { MutableInteractionSource() }
+    val isGeneroPressed by generoInteractionSource.collectIsPressedAsState()
+    
+    LaunchedEffect(isGeneroPressed) {
+        if (isGeneroPressed) {
+            generoExpanded = !generoExpanded
+        }
+    }
+    
     Box {
         OutlinedTextField(
             value = when(uiState.genero) {
@@ -303,8 +369,7 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
             trailingIcon = { 
                 Icon(
                     imageVector = if (generoExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (generoExpanded) "Cerrar" else "Abrir",
-                    modifier = Modifier.clickable { generoExpanded = !generoExpanded }
+                    contentDescription = if (generoExpanded) "Cerrar" else "Abrir"
                 )
             },
             shape = RoundedCornerShape(24.dp),
@@ -312,14 +377,13 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = GreenPrimary,
                 unfocusedBorderColor = LightGrayText
-            )
+            ),
+            interactionSource = generoInteractionSource
         )
         DropdownMenu(
             expanded = generoExpanded,
             onDismissRequest = { generoExpanded = false },
-            modifier = Modifier
-                .background(Color.White)
-                .width(IntrinsicSize.Min)
+            modifier = Modifier.fillMaxWidth()
         ) {
             uiState.generos.forEach { option ->
                 DropdownMenuItem(
@@ -341,44 +405,131 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
     }
     Spacer(modifier = Modifier.height(12.dp))
     
-    OutlinedTextField(
-        value = uiState.alturaCm,
-        onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateAltura(it)) },
-        label = { Text("Altura (cm) *") },
-        singleLine = true,
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = GreenPrimary,
-            unfocusedBorderColor = LightGrayText
+    // === ALTURA (Dropdown 100-250 cm) ===
+    var alturaExpanded by remember { mutableStateOf(false) }
+    val alturaInteractionSource = remember { MutableInteractionSource() }
+    val isAlturaPressed by alturaInteractionSource.collectIsPressedAsState()
+    
+    LaunchedEffect(isAlturaPressed) {
+        if (isAlturaPressed) {
+            alturaExpanded = !alturaExpanded
+        }
+    }
+    
+    Box {
+        OutlinedTextField(
+            value = uiState.alturaCm,
+            onValueChange = { },
+            readOnly = true,
+            label = { Text("Altura *") },
+            trailingIcon = { 
+                Icon(
+                    imageVector = if (alturaExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (alturaExpanded) "Cerrar" else "Abrir"
+                )
+            },
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = GreenPrimary,
+                unfocusedBorderColor = LightGrayText
+            ),
+            interactionSource = alturaInteractionSource
         )
-    )
+        DropdownMenu(
+            expanded = alturaExpanded,
+            onDismissRequest = { alturaExpanded = false },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) {
+            uiState.alturas.forEach { altura ->
+                DropdownMenuItem(
+                    text = { Text(altura) },
+                    onClick = { 
+                        viewModel.handleEvent(RegisterEvent.UpdateAltura(altura))
+                        alturaExpanded = false
+                    }
+                )
+            }
+        }
+    }
     Spacer(modifier = Modifier.height(12.dp))
     
-    OutlinedTextField(
-        value = uiState.pesoKg,
-        onValueChange = { viewModel.handleEvent(RegisterEvent.UpdatePeso(it)) },
-        label = { Text("Peso (kg) *") },
-        singleLine = true,
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = GreenPrimary,
-            unfocusedBorderColor = LightGrayText
+    // === PESO (Dropdown 30-200 kg) ===
+    var pesoExpanded by remember { mutableStateOf(false) }
+    val pesoInteractionSource = remember { MutableInteractionSource() }
+    val isPesoPressed by pesoInteractionSource.collectIsPressedAsState()
+    
+    LaunchedEffect(isPesoPressed) {
+        if (isPesoPressed) {
+            pesoExpanded = !pesoExpanded
+        }
+    }
+    
+    Box {
+        OutlinedTextField(
+            value = uiState.pesoKg,
+            onValueChange = { },
+            readOnly = true,
+            label = { Text("Peso *") },
+            trailingIcon = { 
+                Icon(
+                    imageVector = if (pesoExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (pesoExpanded) "Cerrar" else "Abrir"
+                )
+            },
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.fillMaxWidth(),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = GreenPrimary,
+                unfocusedBorderColor = LightGrayText
+            ),
+            interactionSource = pesoInteractionSource
         )
-    )
+        DropdownMenu(
+            expanded = pesoExpanded,
+            onDismissRequest = { pesoExpanded = false },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) {
+            uiState.pesos.forEach { peso ->
+                DropdownMenuItem(
+                    text = { Text(peso) },
+                    onClick = { 
+                        viewModel.handleEvent(RegisterEvent.UpdatePeso(peso))
+                        pesoExpanded = false
+                    }
+                )
+            }
+        }
+    }
 }
 
+// ============================================================================
+// PASO 3: Preferencias (Nivel de actividad física, Objetivo principal)
+// ============================================================================
 @Composable
 private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.proyecto_droid.ui.viewmodel.RegisterUiState) {
     Text(
-        text = "Preferencias y objetivos",
+        text = "Actividad física y objetivos",
         color = LightGrayText,
         style = MaterialTheme.typography.bodyMedium,
         modifier = Modifier.padding(bottom = 24.dp)
     )
     
+    // === NIVEL DE ACTIVIDAD FÍSICA (Dropdown) ===
     var nivelActividadExpanded by remember { mutableStateOf(false) }
+    val nivelActividadInteractionSource = remember { MutableInteractionSource() }
+    val isNivelActividadPressed by nivelActividadInteractionSource.collectIsPressedAsState()
+    
+    LaunchedEffect(isNivelActividadPressed) {
+        if (isNivelActividadPressed) {
+            nivelActividadExpanded = !nivelActividadExpanded
+        }
+    }
+    
     Box {
         OutlinedTextField(
             value = uiState.nivelActividad,
@@ -388,8 +539,7 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
             trailingIcon = { 
                 Icon(
                     imageVector = if (nivelActividadExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (nivelActividadExpanded) "Cerrar" else "Abrir",
-                    modifier = Modifier.clickable { nivelActividadExpanded = !nivelActividadExpanded }
+                    contentDescription = if (nivelActividadExpanded) "Cerrar" else "Abrir"
                 )
             },
             shape = RoundedCornerShape(24.dp),
@@ -397,14 +547,13 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = GreenPrimary,
                 unfocusedBorderColor = LightGrayText
-            )
+            ),
+            interactionSource = nivelActividadInteractionSource
         )
         DropdownMenu(
             expanded = nivelActividadExpanded,
             onDismissRequest = { nivelActividadExpanded = false },
-            modifier = Modifier
-                .background(Color.White)
-                .width(IntrinsicSize.Min)
+            modifier = Modifier.fillMaxWidth()
         ) {
             uiState.nivelesActividad.forEach { option ->
                 DropdownMenuItem(
@@ -419,7 +568,17 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
     }
     Spacer(modifier = Modifier.height(12.dp))
     
+    // === OBJETIVO PRINCIPAL (Dropdown) ===
     var objetivoExpanded by remember { mutableStateOf(false) }
+    val objetivoInteractionSource = remember { MutableInteractionSource() }
+    val isObjetivoPressed by objetivoInteractionSource.collectIsPressedAsState()
+    
+    LaunchedEffect(isObjetivoPressed) {
+        if (isObjetivoPressed) {
+            objetivoExpanded = !objetivoExpanded
+        }
+    }
+    
     Box {
         OutlinedTextField(
             value = uiState.objetivoPrincipal,
@@ -429,8 +588,7 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
             trailingIcon = { 
                 Icon(
                     imageVector = if (objetivoExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (objetivoExpanded) "Cerrar" else "Abrir",
-                    modifier = Modifier.clickable { objetivoExpanded = !objetivoExpanded }
+                    contentDescription = if (objetivoExpanded) "Cerrar" else "Abrir"
                 )
             },
             shape = RoundedCornerShape(24.dp),
@@ -438,14 +596,13 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = GreenPrimary,
                 unfocusedBorderColor = LightGrayText
-            )
+            ),
+            interactionSource = objetivoInteractionSource
         )
         DropdownMenu(
             expanded = objetivoExpanded,
             onDismissRequest = { objetivoExpanded = false },
-            modifier = Modifier
-                .background(Color.White)
-                .width(IntrinsicSize.Min)
+            modifier = Modifier.fillMaxWidth()
         ) {
             uiState.objetivos.forEach { option ->
                 DropdownMenuItem(
@@ -458,34 +615,4 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
             }
         }
     }
-    Spacer(modifier = Modifier.height(12.dp))
-    
-    OutlinedTextField(
-        value = uiState.preferenciasAlimentarias,
-        onValueChange = { viewModel.handleEvent(RegisterEvent.UpdatePreferenciasAlimentarias(it)) },
-        label = { Text("Preferencias alimentarias (opcional)") },
-        minLines = 3,
-        maxLines = 5,
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = GreenPrimary,
-            unfocusedBorderColor = LightGrayText
-        )
-    )
-    Spacer(modifier = Modifier.height(12.dp))
-    
-    OutlinedTextField(
-        value = uiState.alergias,
-        onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateAlergias(it)) },
-        label = { Text("Alergias (opcional)") },
-        minLines = 2,
-        maxLines = 4,
-        shape = RoundedCornerShape(24.dp),
-        modifier = Modifier.fillMaxWidth(),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = GreenPrimary,
-            unfocusedBorderColor = LightGrayText
-        )
-    )
 } 
