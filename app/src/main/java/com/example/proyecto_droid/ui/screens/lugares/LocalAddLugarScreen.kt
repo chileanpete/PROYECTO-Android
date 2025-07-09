@@ -1,9 +1,11 @@
 package com.example.proyecto_droid.ui.screens.lugares
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -16,80 +18,71 @@ fun LocalAddLugarScreen(
     navController: NavController,
     viewModel: LocalLugarViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    val uiState = viewModel.lugarUiState
+
+    val uiState: LugarUiState by viewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Agregar Categoría") })
-        },
+        topBar = { TopAppBar(title = { Text("Nuevo Lugar") }) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(paddingValues)
-                .fillMaxSize()
+                .padding(padding)
+                .fillMaxWidth()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Campo Nombre (requerido)
             OutlinedTextField(
                 value = uiState.lugarData.nombre,
                 onValueChange = { viewModel.updateUiState(uiState.lugarData.copy(nombre = it)) },
-                label = { Text("Nombre") },
+                label = { Text("Nombre*") },
                 isError = uiState.lugarData.nombre.isBlank(),
                 modifier = Modifier.fillMaxWidth()
             )
-            if (uiState.lugarData.nombre.isBlank()) {
-                Text(
-                    text = "El nombre es obligatorio",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                )
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+            // Campo Tipo (ej: Restaurante, Café, etc.)
             OutlinedTextField(
-                value = uiState.lugarData.descripcion,
-                onValueChange = { viewModel.updateUiState(uiState.lugarData.copy(descripcion = it)) },
-                label = { Text("Descripción") },
-                isError = uiState.lugarData.descripcion.isBlank(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(120.dp),
-                maxLines = 5
+                value = uiState.lugarData.tipo,
+                onValueChange = { viewModel.updateUiState(uiState.lugarData.copy(tipo = it)) },
+                label = { Text("Tipo") },
+                modifier = Modifier.fillMaxWidth()
             )
-            if (uiState.lugarData.descripcion.isBlank()) {
-                Text(
-                    text = "La descripción es obligatoria",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
-                )
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Campo Ubicación
+            OutlinedTextField(
+                value = uiState.lugarData.ubicacion ?: "",
+                onValueChange = { viewModel.updateUiState(uiState.lugarData.copy(ubicacion = it.ifBlank { null })) },
+                label = { Text("Dirección") },
+                modifier = Modifier.fillMaxWidth()
+            )
 
+            // Campo Teléfono
+            OutlinedTextField(
+                value = uiState.lugarData.telefono ?: "",
+                onValueChange = { viewModel.updateUiState(uiState.lugarData.copy(telefono = it.ifBlank { null })) },
+                label = { Text("Teléfono") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Botón Guardar
             Button(
                 onClick = {
                     if (uiState.isEntryValid) {
-                        viewModel.saveLugar()
                         scope.launch {
-                            snackbarHostState.showSnackbar("Categoría guardada")
-                        }
-                        navController.popBackStack()
-                    } else {
-                        scope.launch {
-                            snackbarHostState.showSnackbar("Por favor, completa todos los campos correctamente")
+                            viewModel.saveLugar()
+                            snackbarHostState.showSnackbar("Lugar guardado")
+                            navController.popBackStack()
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = uiState.isEntryValid
+                enabled = uiState.isEntryValid,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Guardar")
+                Text("Guardar Lugar")
             }
         }
     }

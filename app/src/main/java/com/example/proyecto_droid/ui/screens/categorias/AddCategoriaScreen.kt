@@ -8,6 +8,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.proyecto_droid.ui.AppViewModelProvider
+import com.example.proyecto_droid.ui.screens.lugares.LugarUiState
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -16,80 +17,95 @@ fun AddCategoriaScreen(
     navController: NavController,
     viewModel: CategoriaViewModel = viewModel(factory = AppViewModelProvider.Factory)
 ) {
-    val uiState = viewModel.categoriaUiState
+    val uiState: CategoriaUiState by viewModel.formState.collectAsState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Agregar Categoría") })
-        },
+        topBar = { TopAppBar(title = { Text("Agregar Categoría") }) },
         snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { paddingValues ->
+    ) { padding ->
         Column(
             modifier = Modifier
-                .padding(paddingValues)
+                .padding(padding)
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.Top
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Campo Nombre
             OutlinedTextField(
                 value = uiState.categoriaData.nombre,
-                onValueChange = { viewModel.updateUiState(uiState.categoriaData.copy(nombre = it)) },
-                label = { Text("Nombre") },
+                onValueChange = { newName ->
+                    viewModel.updateUiState(uiState.categoriaData.copy(nombre = newName))
+                },
+                label = { Text("Nombre*") },
                 isError = uiState.categoriaData.nombre.isBlank(),
                 modifier = Modifier.fillMaxWidth()
             )
+
             if (uiState.categoriaData.nombre.isBlank()) {
                 Text(
                     text = "El nombre es obligatorio",
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
+            // Campo Descripción
             OutlinedTextField(
-                value = uiState.categoriaData.descripcion,
-                onValueChange = { viewModel.updateUiState(uiState.categoriaData.copy(descripcion = it)) },
-                label = { Text("Descripción") },
-                isError = uiState.categoriaData.descripcion.isBlank(),
+                value = uiState.categoriaData.descripcion ?: "",  // Provee un valor por defecto
+                onValueChange = { newDesc ->
+                    viewModel.updateUiState(uiState.categoriaData.copy(
+                        descripcion = newDesc.ifBlank { null }  // Convierte a null si está vacío
+                    ))
+                },
+                label = { Text("Descripción*") },
+                isError = uiState.categoriaData.descripcion?.isBlank() ?: true,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp),
                 maxLines = 5
             )
-            if (uiState.categoriaData.descripcion.isBlank()) {
+
+            if (uiState.categoriaData.descripcion?.isBlank() == true) {
                 Text(
                     text = "La descripción es obligatoria",
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                    style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // Botón para subir imagen (opcional)
+            /*
+            Button(
+                onClick = { /* Implementar selección de imagen */ },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(Icons.Default.Image, contentDescription = "Imagen")
+                Spacer(Modifier.width(8.dp))
+                Text("Seleccionar imagen")
+            }
+            */
 
+            // Botón Guardar
             Button(
                 onClick = {
                     if (uiState.isEntryValid) {
-                        viewModel.saveCategoria()
                         scope.launch {
+                            viewModel.saveCategoria()
                             snackbarHostState.showSnackbar("Categoría guardada")
+                            navController.popBackStack()
                         }
-                        navController.popBackStack()
                     } else {
                         scope.launch {
-                            snackbarHostState.showSnackbar("Por favor, completa todos los campos correctamente")
+                            snackbarHostState.showSnackbar("Complete los campos requeridos")
                         }
                     }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = uiState.isEntryValid
             ) {
-                Text("Guardar")
+                Text("Guardar Categoría")
             }
         }
     }
