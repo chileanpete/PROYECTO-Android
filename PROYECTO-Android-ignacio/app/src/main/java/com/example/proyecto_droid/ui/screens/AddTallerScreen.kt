@@ -1,6 +1,7 @@
 package com.example.proyecto_droid.ui.screens
 
 import android.widget.Toast
+import com.example.proyecto_droid.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.proyecto_droid.data.local.entity.TallerEntity
@@ -46,6 +48,7 @@ fun AddTallerScreen(fechaSeleccionada: String, viewModel: TallerViewModel, navCo
     var requisitos by remember { mutableStateOf("") }
 
     val context = LocalContext.current
+    val guardar_taller = stringResource(R.string.guardar_taller)
 
     Column(modifier = Modifier.verticalScroll(rememberScrollState()).padding(16.dp)) {
         Text("Nuevo taller para $fechaSeleccionada")
@@ -249,7 +252,7 @@ fun AddTallerScreen(fechaSeleccionada: String, viewModel: TallerViewModel, navCo
                 .fillMaxWidth()
                 .height(50.dp)
         ){
-            Text("Guardar Taller")
+            Text(text = guardar_taller)
         }
     }
 }

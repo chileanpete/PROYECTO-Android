@@ -27,9 +27,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_droid.R
 import com.example.proyecto_droid.data.local.entity.PlatoFavoritoEntity
 import com.example.proyecto_droid.ui.theme.GreenPrimary
 import com.example.proyecto_droid.ui.theme.LightGrayText
@@ -45,13 +47,17 @@ fun NutritionScreen(viewModel: FavoritoViewModel = viewModel()) {
     val fechaActual = remember { getCurrentDate() }
     val favoritos by viewModel.favoritos.collectAsState()
 
+    val agregar_platofav = stringResource(R.string.agregar_platofav)
+    val guardar_menufav = stringResource(R.string.guardar_menufav)
+    val menu_fav = stringResource(R.string.menu_fav)
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
         item {
-            Text("Agregar Plato Favorito", style = MaterialTheme.typography.headlineSmall)
+            Text(text = agregar_platofav, style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedTextField(
@@ -101,12 +107,12 @@ fun NutritionScreen(viewModel: FavoritoViewModel = viewModel()) {
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text("Guardar en Menu Favorito", color = Color.White)
+                Text(text = guardar_menufav, color = Color.White)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Text("Menu Favorito", style = MaterialTheme.typography.headlineSmall)
+            Text(text = menu_fav, style = MaterialTheme.typography.headlineSmall)
             Spacer(modifier = Modifier.height(12.dp))
         }
 
@@ -120,6 +126,8 @@ fun NutritionScreen(viewModel: FavoritoViewModel = viewModel()) {
 
 @Composable
 fun FavoritoCard(favorito: PlatoFavoritoEntity, onDelete: () -> Unit) {
+    val eliminar_platofav = stringResource(R.string.eliminar_platofav)
+
     Card(
         shape = RoundedCornerShape(16.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -139,7 +147,7 @@ fun FavoritoCard(favorito: PlatoFavoritoEntity, onDelete: () -> Unit) {
                     .fillMaxWidth()
                     .height(50.dp)
             ) {
-                Text("Eliminar", color = Color.White)
+                Text(text = eliminar_platofav, color = Color.White)
             }
         }
     }

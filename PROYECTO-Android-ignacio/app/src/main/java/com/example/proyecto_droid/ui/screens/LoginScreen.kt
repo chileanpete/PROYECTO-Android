@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -40,6 +41,15 @@ fun LoginScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    val app_name = stringResource(R.string.app_name)
+    val tu_vida_saludable = stringResource(R.string.tu_vida_saludable)
+    val forgot_contraseña = stringResource(R.string.forgot_contraseña)
+    val iniciar_sesion = stringResource(R.string.iniciar_sesion)
+    val no_cuenta = stringResource(R.string.no_cuenta)
+    val registrar = stringResource(R.string.registrar)
+    val clean_BD = stringResource(R.string.clean_BD)
+
 
     // Observar cambios en el estado de login
     LaunchedEffect(uiState.isLoginSuccessful) {
@@ -69,7 +79,7 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             Text(
-                text = "Vida Sana UCSC",
+                text = app_name,
                 style = MaterialTheme.typography.headlineMedium.copy(
                     color = GreenPrimary,
                     fontSize = 32.sp
@@ -78,7 +88,7 @@ fun LoginScreen(
             )
             
             Text(
-                text = "Tu vida saludable universitaria",
+                text = tu_vida_saludable,
                 color = LightGrayText,
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier.padding(bottom = 32.dp)
@@ -132,7 +142,7 @@ fun LoginScreen(
                 horizontalArrangement = Arrangement.End
             ) {
                 Text(
-                    text = "¿Olvidaste tu contraseña?",
+                    text = forgot_contraseña,
                     color = GreenPrimary,
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.clickable {
@@ -164,7 +174,7 @@ fun LoginScreen(
                 if (uiState.isLoading) {
                     CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(24.dp))
                 } else {
-                    Text("Iniciar Sesión", color = Color.White, fontSize = 18.sp)
+                    Text(text = iniciar_sesion, color = Color.White, fontSize = 18.sp)
                 }
             }
             
@@ -197,9 +207,9 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center
             ) {
-                Text("¿No tienes cuenta? ", color = LightGrayText)
+                Text(text = no_cuenta, color = LightGrayText)
                 Text(
-                    text = "Regístrate",
+                    text = registrar,
                     color = GreenPrimary,
                     modifier = Modifier.clickable {
                         navController.navigate("register")
@@ -219,7 +229,7 @@ fun LoginScreen(
                 shape = RoundedCornerShape(20.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color.Red.copy(alpha = 0.8f))
             ) {
-                Text("Limpiar BD (Desarrollo)", color = Color.White, fontSize = 14.sp)
+                Text(text = clean_BD, color = Color.White, fontSize = 14.sp)
             }
             
             Spacer(modifier = Modifier.height(32.dp))

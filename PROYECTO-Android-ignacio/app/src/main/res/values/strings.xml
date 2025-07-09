@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">Vida Sana UCSC</string>
+    <string name="guardar_taller">Guardar Taller</string>
+    <string name="tips_comida">Tips de Comida</string>
+    <string name="tips_ejercicio">Tips de Ejercicio</string>
+    <string name="eventos">Eventos</string>
+    <string name="calendario">Calendario</string>
+    <string name="agregar_taller">Agregar Taller</string>
+    <string name="tu_vida_saludable">Tu vida saludable universitaria</string>
+    <string name="forgot_contraseña">¿Olvidaste tu contraseña?</string>
+    <string name="iniciar_sesion">Iniciar Ssesión</string>
+    <string name="no_cuenta">¿No tienes cuenta?</string>
+    <string name="registrar">Regístrate</string>
+    <string name="clean_BD">Limpiar BD (Desarrollo)</string>
+    <string name="agregar_platofav">Agregar Plato Favorito</string>
+    <string name="guardar_menufav">Guardar en Menú Favorito</string>
+    <string name="menu_fav">Menú Favorito</string>
+    <string name="eliminar_platofav">Eliminar</string>
 </resources>

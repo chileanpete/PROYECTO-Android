@@ -4,7 +4,6 @@ import android.icu.util.Calendar
 import android.widget.CalendarView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -23,23 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.proyecto_droid.R
-import com.example.proyecto_droid.data.local.entity.PlatoFavoritoEntity
 import com.example.proyecto_droid.data.local.entity.TallerEntity
 import com.example.proyecto_droid.ui.theme.BackgroundLight
 import com.example.proyecto_droid.ui.theme.GreenPrimary
 import com.example.proyecto_droid.ui.theme.LightGrayText
-import com.example.proyecto_droid.ui.viewmodel.AddFavoritoForm
 import com.example.proyecto_droid.ui.viewmodel.FavoritoViewModel
 import com.example.proyecto_droid.ui.viewmodel.SessionViewModel
 import com.example.proyecto_droid.ui.viewmodel.TallerViewModel
@@ -79,6 +74,12 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel,
 
     val talleres by tallerViewModel.getByFecha(selectedDate).collectAsState(initial = emptyList())
     val favoritos by favoritoViewModel.favoritos.collectAsState()
+
+    val tips_comida = stringResource(R.string.tips_comida)
+    val tips_ejercicio = stringResource(R.string.tips_ejercicio)
+    val eventos = stringResource(R.string.eventos)
+    val calendario = stringResource(R.string.calendario)
+    val agregar_taller = stringResource(R.string.agregar_taller)
 
     Column(
         modifier = Modifier
@@ -140,7 +141,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel,
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
-        SectionTitle("Tips de Comida")
+        SectionTitle(text = tips_comida)
         LazyRow(contentPadding = PaddingValues(horizontal = 12.dp)) {
             items(foodTips) { tip ->
                 ModernTipCard(tip, circleColor = GreenPrimary)
@@ -148,7 +149,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel,
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
-        SectionTitle("Tips de Ejercicio")
+        SectionTitle(text = tips_ejercicio)
         LazyRow(contentPadding = PaddingValues(horizontal = 12.dp)) {
             items(exerciseTips) { tip ->
                 ModernTipCard(tip, circleColor = Color(0xFF1976D2))
@@ -156,7 +157,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel,
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
-        SectionTitle("Eventos")
+        SectionTitle(text = eventos)
         Column(modifier = Modifier.padding(horizontal = 12.dp)) {
             events.forEach { event ->
                 ModernEventCard(event, circleColor = Color(0xFFFBC02D))
@@ -164,7 +165,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel,
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
-        SectionTitle("Calendario")
+        SectionTitle(text = calendario)
 
         AndroidView(factory = { context ->
             CalendarView(context).apply {
@@ -188,7 +189,7 @@ fun HomeScreen(navController: NavController, sessionViewModel: SessionViewModel,
                 .fillMaxWidth()
                 .height(50.dp)
         ) {
-            Text("Agregar Taller", color = Color.White)
+            Text(text = agregar_taller, color = Color.White)
         }
         Spacer(Modifier.height(16.dp))
         SectionTitle("Talleres para el $selectedDate")
