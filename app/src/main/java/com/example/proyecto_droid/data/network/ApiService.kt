@@ -20,4 +20,7 @@ interface ApiService {
     suspend fun getRegistrosActividadFisica(
         @Query("id_usuario") idUsuario: Int
     ): Response<ApiResponse<List<RegistroActividad>>>
+
+    @GET("api/actividad-fisica/exportar-pdf")
+    suspend fun exportarPDFActividad(): Response<com.example.proyecto_droid.data.network.services.ApiResponse<com.example.proyecto_droid.data.network.services.ExportarPDFResponse>>
 } 

@@ -1,5 +1,6 @@
 package com.example.proyecto_droid.data.network
 
+import com.example.proyecto_droid.data.network.services.RegistroConsumoService
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -36,5 +37,14 @@ object RetrofitClient {
             .client(okHttpClient)
             .build()
             .create(ApiService::class.java)
+    }
+
+    val registroConsumoService: RegistroConsumoService by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .client(okHttpClient)
+            .build()
+            .create(RegistroConsumoService::class.java)
     }
 } 

@@ -31,6 +31,18 @@ import com.example.proyecto_droid.viewmodel.RegistroConsumoViewModel
 import com.example.proyecto_droid.viewmodel.RegistroConsumoUiState
 import androidx.core.content.ContextCompat
 import android.app.Activity
+import com.example.proyecto_droid.ui.screens.registro.AddRegistroConsumoDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Comment
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +67,7 @@ fun RegistroConsumoScreen(
     val exportError by viewModel.exportError.collectAsState()
     val pdfFile by viewModel.pdfFile.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
-    var platos by remember { mutableStateOf<List<Plato>>(emptyList()) }
+    val platos by viewModel.platos.collectAsState()
     var showSnackBar by remember { mutableStateOf(false) }
     var snackBarMessage by remember { mutableStateOf("") }
 
@@ -64,7 +76,7 @@ fun RegistroConsumoScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            viewModel.exportarPDF()
+            viewModel.exportarPDF(context)
         }
     }
 
@@ -75,50 +87,12 @@ fun RegistroConsumoScreen(
                 context,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED -> {
-                viewModel.exportarPDF()
+                viewModel.exportarPDF(context)
             }
             else -> {
                 permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
         }
-    }
-
-    // Simulación: podrías cargar los platos desde la API si lo deseas
-    LaunchedEffect(Unit) {
-        platos = listOf(
-            Plato(
-                idPlato = 1,
-                nombre = "Ensalada César",
-                descripcion = "Ensalada fresca con lechuga, crutones y aderezo",
-                precio = 8.50,
-                caloriasPorPorcion = 250,
-                proteinasG = 12.0,
-                carbohidratosG = 15.0,
-                grasasG = 18.0,
-                esVegetariano = false,
-                esVegano = false,
-                sinGluten = false,
-                imagenUrl = null,
-                lugar = null,
-                categoria = null
-            ),
-            Plato(
-                idPlato = 2,
-                nombre = "Pollo a la plancha",
-                descripcion = "Pechuga de pollo a la plancha con vegetales",
-                precio = 12.00,
-                caloriasPorPorcion = 350,
-                proteinasG = 35.0,
-                carbohidratosG = 5.0,
-                grasasG = 12.0,
-                esVegetariano = false,
-                esVegano = false,
-                sinGluten = true,
-                imagenUrl = null,
-                lugar = null,
-                categoria = null
-            )
-        )
     }
 
     if (showSnackBar) {
@@ -212,10 +186,116 @@ fun RegistroConsumoScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         items(registros) { registro ->
-                            // Aquí deberías tener un RegistroConsumoCard o similar
-                            Text(registro.toString())
+                            RegistroConsumoCard(registro)
                         }
                     }
+                }
+            }
+        }
+
+        if (pdfFile != null) {
+            Button(
+                onClick = { viewModel.compartirPDF(context) },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+            ) {
+                Icon(Icons.Default.Download, contentDescription = null, tint = Color.White)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Compartir PDF", color = Color.White)
+            }
+        }
+    }
+
+    if (isExporting) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = GreenPrimary)
+        }
+    }
+
+    if (!exportError.isNullOrBlank()) {
+        Snackbar(
+            modifier = Modifier.padding(16.dp),
+            action = {
+                TextButton(onClick = { viewModel.limpiarErroresExportacion() }) {
+                    Text("Cerrar")
+                }
+            }
+        ) { Text(exportError ?: "") }
+    }
+
+    // Mostrar el diálogo para agregar registro de consumo
+    if (showAddDialog) {
+        AddRegistroConsumoDialog(
+            platos = platos,
+            onDismiss = { showAddDialog = false },
+            onConfirm = { plato, porciones, valoracion, comentario ->
+                // Aquí deberías obtener la fecha y hora actuales o pedirlas al usuario
+                val fecha = "2024-01-15" // TODO: reemplazar por la fecha real
+                val hora = "12:30" // TODO: reemplazar por la hora real
+                viewModel.crearRegistroConsumo(
+                    plato = plato,
+                    porciones = porciones,
+                    valoracion = valoracion,
+                    comentario = comentario,
+                    fecha = fecha,
+                    hora = hora
+                )
+                showAddDialog = false
+            }
+        )
+    }
+} 
+
+@Composable
+fun RegistroConsumoCard(registro: com.example.proyecto_droid.model.RegistroConsumo) {
+    val platoNombre = when (val p = registro.plato) {
+        is Map<*, *> -> p["nombre"]?.toString() ?: "Plato"
+        is String -> p
+        else -> "Plato"
+    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Restaurant, contentDescription = null, tint = GreenPrimary)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(platoNombre, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.CalendarToday, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(registro.fechaConsumo.take(10), style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.width(12.dp))
+                Icon(Icons.Default.Schedule, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(registro.horaConsumo.take(5), style = MaterialTheme.typography.bodySmall)
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Porciones: ", fontWeight = FontWeight.SemiBold)
+                Text(registro.porciones)
+                Spacer(modifier = Modifier.width(12.dp))
+                Text("Calorías: ", fontWeight = FontWeight.SemiBold)
+                Text(registro.caloriasTotales.toString())
+            }
+            if (registro.valoracion != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Star, contentDescription = null, tint = Color(0xFFFFC107), modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Valoración: ${registro.valoracion}")
+                }
+            }
+            if (!registro.comentario.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Comment, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(registro.comentario ?: "")
                 }
             }
         }

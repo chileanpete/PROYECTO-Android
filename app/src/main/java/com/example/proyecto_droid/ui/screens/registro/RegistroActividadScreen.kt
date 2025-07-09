@@ -89,7 +89,7 @@ fun RegistroActividadScreen(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            viewModel.exportarPDF()
+            viewModel.exportarPDF(context)
         }
     }
 
@@ -100,7 +100,7 @@ fun RegistroActividadScreen(
                 context,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED -> {
-                viewModel.exportarPDF()
+                viewModel.exportarPDF(context)
             }
             else -> {
                 permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
