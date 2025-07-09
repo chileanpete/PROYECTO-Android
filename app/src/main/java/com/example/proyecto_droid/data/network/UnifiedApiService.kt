@@ -46,6 +46,9 @@ interface UnifiedApiService {
     @GET("platos")
     suspend fun getPlatos(@Query("page") page: Int? = null): UnifiedApiResponse<PaginatedResponse<Plato>>
     
+    @GET("platos/simple")
+    suspend fun getPlatosSimple(): UnifiedApiResponse<PaginatedResponse<Plato>>
+    
     @GET("platos/{id}")
     suspend fun getPlato(@Path("id") id: Int): UnifiedApiResponse<Plato>
     

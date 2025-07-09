@@ -23,6 +23,12 @@ sealed class RegistroConsumoUiState {
     data class Error(val message: String) : RegistroConsumoUiState()
 }
 
+sealed class PlatosUiState {
+    object Loading : PlatosUiState()
+    data class Success(val platos: List<Plato>) : PlatosUiState()
+    data class Error(val message: String) : PlatosUiState()
+}
+
 class RegistroConsumoViewModel(application: Application) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<RegistroConsumoUiState>(RegistroConsumoUiState.Loading)
     val uiState: StateFlow<RegistroConsumoUiState> = _uiState
@@ -34,6 +40,10 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
     val exportError = MutableStateFlow<String?>(null)
     val pdfFile = MutableStateFlow<File?>(null)
 
+    // Estados para manejo de platos con mejor UX
+    private val _platosUiState = MutableStateFlow<PlatosUiState>(PlatosUiState.Loading)
+    val platosUiState: StateFlow<PlatosUiState> = _platosUiState
+    
     private val _platos = MutableStateFlow<List<Plato>>(emptyList())
     val platos: StateFlow<List<Plato>> = _platos
 
@@ -52,6 +62,10 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
 
     fun refreshRegistros() {
         cargarRegistros(getUserId())
+    }
+    
+    fun refreshPlatos() {
+        cargarPlatos()
     }
 
     init {
@@ -114,21 +128,74 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
 
     fun cargarPlatos() {
         viewModelScope.launch {
+            _platosUiState.value = PlatosUiState.Loading
             try {
+                Log.d("RegistroConsumoVM", "Iniciando carga de platos...")
                 val response = service.getPlatos(page = null)
-                Log.d("RegistroConsumoVM", "Respuesta getPlatos: $response")
+                Log.d("RegistroConsumoVM", "Respuesta recibida - success: ${response.success}")
+                
                 if (response.isSuccessful() && response.data != null) {
                     val lista = response.data.data
-                    Log.d("RegistroConsumoVM", "Platos recibidos: $lista")
+                    Log.d("RegistroConsumoVM", "Platos recibidos: ${lista.size} elementos")
                     _platos.value = lista
+                    _platosUiState.value = PlatosUiState.Success(lista)
                 } else {
-                    Log.e("RegistroConsumoVM", "Error en respuesta getPlatos: ${response.getErrorMessage()}")
+                    val errorMsg = response.getErrorMessage()
+                    Log.e("RegistroConsumoVM", "Error en respuesta getPlatos: $errorMsg")
                     _platos.value = emptyList()
+                    _platosUiState.value = PlatosUiState.Error(errorMsg)
                 }
-            } catch (e: Exception) {
-                Log.e("RegistroConsumoVM", "Excepción en cargarPlatos", e)
+            } catch (e: com.google.gson.JsonSyntaxException) {
+                Log.e("RegistroConsumoVM", "Error de sintaxis JSON en cargarPlatos", e)
                 _platos.value = emptyList()
+                _platosUiState.value = PlatosUiState.Error("Error de formato en la respuesta del servidor. Intenta de nuevo.")
+            } catch (e: java.io.EOFException) {
+                Log.e("RegistroConsumoVM", "Error de JSON truncado en cargarPlatos - respuesta incompleta", e)
+                _platos.value = emptyList()
+                _platosUiState.value = PlatosUiState.Error("Respuesta incompleta del servidor. Verifica tu conexión e intenta de nuevo.")
+                // Intentar reintentar después de un breve delay
+                kotlinx.coroutines.delay(2000)
+                Log.d("RegistroConsumoVM", "Reintentando carga de platos...")
+                reintentarCargarPlatos()
+            } catch (e: retrofit2.HttpException) {
+                Log.e("RegistroConsumoVM", "Error HTTP ${e.code()} en cargarPlatos: ${e.message()}", e)
+                _platos.value = emptyList()
+                _platosUiState.value = PlatosUiState.Error("Error del servidor (${e.code()}). Intenta de nuevo más tarde.")
+            } catch (e: java.net.SocketTimeoutException) {
+                Log.e("RegistroConsumoVM", "Timeout al cargar platos", e)
+                _platos.value = emptyList()
+                _platosUiState.value = PlatosUiState.Error("Tiempo de espera agotado. Verifica tu conexión e intenta de nuevo.")
+            } catch (e: java.net.UnknownHostException) {
+                Log.e("RegistroConsumoVM", "Error de conectividad al cargar platos", e)
+                _platos.value = emptyList()
+                _platosUiState.value = PlatosUiState.Error("Sin conexión a internet. Verifica tu red e intenta de nuevo.")
+            } catch (e: Exception) {
+                Log.e("RegistroConsumoVM", "Excepción general en cargarPlatos: ${e.javaClass.simpleName} - ${e.message}", e)
+                _platos.value = emptyList()
+                _platosUiState.value = PlatosUiState.Error("Error inesperado: ${e.localizedMessage ?: e.message ?: "Error desconocido"}")
             }
+        }
+    }
+    
+    private suspend fun reintentarCargarPlatos() {
+        try {
+            Log.d("RegistroConsumoVM", "Reintento de carga de platos con endpoint simplificado...")
+            val response = service.getPlatosSimple() // Usar endpoint simplificado como fallback
+            
+            if (response.isSuccessful() && response.data != null) {
+                val lista = response.data.data
+                Log.d("RegistroConsumoVM", "Reintento exitoso con endpoint simplificado - Platos: ${lista.size}")
+                _platos.value = lista
+                _platosUiState.value = PlatosUiState.Success(lista)
+            } else {
+                Log.e("RegistroConsumoVM", "Reintento falló con endpoint simplificado: ${response.getErrorMessage()}")
+                _platos.value = emptyList()
+                _platosUiState.value = PlatosUiState.Error("No se pudieron cargar los platos. Intenta de nuevo más tarde.")
+            }
+        } catch (e: Exception) {
+            Log.e("RegistroConsumoVM", "Error en reintento con endpoint simplificado: ${e.message}", e)
+            _platos.value = emptyList()
+            _platosUiState.value = PlatosUiState.Error("Error inesperado al cargar platos. Verifica tu conexión.")
         }
     }
 

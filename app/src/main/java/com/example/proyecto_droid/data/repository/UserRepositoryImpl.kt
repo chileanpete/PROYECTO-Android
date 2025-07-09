@@ -106,8 +106,8 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             val result = unifiedRepository.changePassword(currentPassword, newPassword)
             result.fold(
-                onSuccess = { success ->
-                    Result.success(success)
+                onSuccess = { 
+                    Result.success(true) // Convertir Unit a Boolean true indicando éxito
                 },
                 onFailure = { exception ->
                     Result.failure(exception)

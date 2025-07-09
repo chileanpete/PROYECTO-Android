@@ -22,9 +22,10 @@ import com.example.proyecto_droid.ui.theme.GreenPrimary
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddRegistroConsumoDialog(
-    platos: List<Plato>,
+    platosUiState: com.example.proyecto_droid.viewmodel.PlatosUiState,
     onDismiss: () -> Unit,
-    onConfirm: (Plato, Double, Int?, String?) -> Unit
+    onConfirm: (Plato, Double, Int?, String?) -> Unit,
+    onRetryLoadPlatos: () -> Unit = {}
 ) {
     var selectedPlato by remember { mutableStateOf<Plato?>(null) }
     var expanded by remember { mutableStateOf(false) }
@@ -32,53 +33,93 @@ fun AddRegistroConsumoDialog(
     var valoracion by remember { mutableStateOf("") }
     var comentario by remember { mutableStateOf("") }
     var errorMsg by remember { mutableStateOf<String?>(null) }
-
+    
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                "Agregar Registro de Comida",
-                color = GreenPrimary,
+                text = "Agregar Registro de Consumo",
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
         },
         text = {
-            Column {
-                // Selector de plato con dropdown
-                Text("Plato:", style = MaterialTheme.typography.labelMedium, color = GreenPrimary)
+            Column(modifier = Modifier.fillMaxWidth()) {
+                // Selector de plato con manejo de estados
+                Text("Plato", fontWeight = FontWeight.Medium)
                 Spacer(modifier = Modifier.height(4.dp))
                 
-                ExposedDropdownMenuBox(
-                    expanded = expanded,
-                    onExpandedChange = { expanded = !expanded }
-                ) {
-                    OutlinedTextField(
-                        value = selectedPlato?.nombre ?: "",
-                        onValueChange = {},
-                        readOnly = true,
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                        placeholder = { Text("Selecciona un plato") },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .menuAnchor(MenuAnchorType.PrimaryEditable, enabled = true),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = GreenPrimary,
-                            focusedLabelColor = GreenPrimary
+                when (platosUiState) {
+                    is com.example.proyecto_droid.viewmodel.PlatosUiState.Loading -> {
+                        OutlinedTextField(
+                            value = "Cargando platos...",
+                            onValueChange = { },
+                            enabled = false,
+                            modifier = Modifier.fillMaxWidth(),
+                            leadingIcon = {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
                         )
-                    )
-                    
-                    ExposedDropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false }
-                    ) {
-                        platos.forEach { plato ->
-                            DropdownMenuItem(
-                                text = { Text(plato.nombre) },
-                                onClick = {
-                                    selectedPlato = plato
-                                    expanded = false
-                                }
+                    }
+                    is com.example.proyecto_droid.viewmodel.PlatosUiState.Error -> {
+                        Column {
+                            OutlinedTextField(
+                                value = "Error al cargar platos",
+                                onValueChange = { },
+                                enabled = false,
+                                modifier = Modifier.fillMaxWidth(),
+                                isError = true,
+                                supportingText = { Text(platosUiState.message) }
                             )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Button(
+                                onClick = onRetryLoadPlatos,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+                            ) {
+                                Text("Reintentar", color = Color.White)
+                            }
+                        }
+                    }
+                    is com.example.proyecto_droid.viewmodel.PlatosUiState.Success -> {
+                        val platos = platosUiState.platos
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = !expanded },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = selectedPlato?.nombre ?: "",
+                                onValueChange = { },
+                                readOnly = true,
+                                label = { Text("Selecciona un plato") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = GreenPrimary,
+                                    focusedLabelColor = GreenPrimary
+                                )
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                platos.forEach { plato ->
+                                    DropdownMenuItem(
+                                        text = { Text(plato.nombre) },
+                                        onClick = {
+                                            selectedPlato = plato
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }

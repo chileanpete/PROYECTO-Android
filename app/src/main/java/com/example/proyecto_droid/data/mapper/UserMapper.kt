@@ -23,10 +23,10 @@ object UserMapper {
             pesoKg = this.pesoKg,
             nivelActividad = this.nivelActividad,
             objetivoPrincipal = this.objetivoPrincipal,
-            preferenciasAlimentarias = this.preferenciasAlimentarias,
-            alergias = this.alergias,
-            createdAt = this.createdAt ?: "",
-            updatedAt = this.updatedAt ?: ""
+            preferenciasAlimentarias = this.preferenciasAlimentarias ?: "",
+            alergias = this.alergias ?: "",
+            createdAt = this.fechaRegistro ?: "",
+            updatedAt = this.fechaUltimoAcceso ?: ""
         )
     }
     
@@ -45,11 +45,11 @@ object UserMapper {
             pesoKg = this.pesoKg,
             nivelActividad = this.nivelActividad,
             objetivoPrincipal = this.objetivoPrincipal,
-            preferenciasAlimentarias = this.preferenciasAlimentarias,
-            alergias = this.alergias,
+            preferenciasAlimentarias = this.preferenciasAlimentarias.takeIf { it.isNotBlank() },
+            alergias = this.alergias.takeIf { it.isNotBlank() },
             passwordHash = "", // Se manejará por separado por seguridad
-            createdAt = this.createdAt,
-            updatedAt = this.updatedAt
+            fechaRegistro = this.createdAt.takeIf { it.isNotBlank() },
+            fechaUltimoAcceso = this.updatedAt.takeIf { it.isNotBlank() }
         )
     }
 } 

@@ -53,6 +53,7 @@ fun RegistroConsumoScreen(
     val pdfFile by viewModel.pdfFile.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     val platos by viewModel.platos.collectAsState()
+    val platosUiState by viewModel.platosUiState.collectAsState()
     var showSnackBar by remember { mutableStateOf(false) }
     var snackBarMessage by remember { mutableStateOf("") }
 
@@ -211,7 +212,7 @@ fun RegistroConsumoScreen(
     // Mostrar el diálogo para agregar registro de consumo
     if (showAddDialog) {
         AddRegistroConsumoDialog(
-            platos = platos,
+            platosUiState = platosUiState,
             onDismiss = { showAddDialog = false },
             onConfirm = { plato, porciones, valoracion, comentario ->
                 // Aquí deberías obtener la fecha y hora actuales o pedirlas al usuario
@@ -226,6 +227,9 @@ fun RegistroConsumoScreen(
                     hora = hora
                 )
                 showAddDialog = false
+            },
+            onRetryLoadPlatos = {
+                viewModel.refreshPlatos()
             }
         )
     }
