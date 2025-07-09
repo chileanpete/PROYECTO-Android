@@ -22,7 +22,7 @@ class UserRepository(context: Context) {
                 val registeredUser = apiResult.getOrNull()!!
                 
                 // Guardar sesión local
-                sessionManager.saveUserSession(registeredUser.email, "${registeredUser.nombre} ${registeredUser.apellidos}")
+                sessionManager.saveUserSession(registeredUser.email, "${registeredUser.nombre} ${registeredUser.apellidos}", registeredUser.id?.toString() ?: "")
                 
                 Result.success(registeredUser)
             } else {
@@ -40,13 +40,13 @@ class UserRepository(context: Context) {
             
             if (apiResult.isSuccess) {
                 val (user, token) = apiResult.getOrNull()!!
-                
+                if (user.id == null) {
+                    return Result.failure(Exception("El usuario no tiene un ID válido"))
+                }
                 // Guardar datos de autenticación
-                authManager.saveAuthData(token, user.id ?: 0, user.email)
-                
+                authManager.saveAuthData(token, user.id, user.email)
                 // Guardar sesión local
-                sessionManager.saveUserSession(email, "${user.nombre} ${user.apellidos}")
-                
+                sessionManager.saveUserSession(email, "${user.nombre} ${user.apellidos}", user.id?.toString() ?: "")
                 Result.success(user)
             } else {
                 Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Credenciales inválidas"))
@@ -78,11 +78,13 @@ class UserRepository(context: Context) {
             val token = authManager.authToken.first()
             val userId = authManager.userId.first()
             
-            if (token != null && userId != null) {
-                remoteUserRepository.getUserProfile(userId, token)
-            } else {
-                Result.failure(Exception("Usuario no autenticado"))
+            if (token.isNullOrEmpty()) {
+                return Result.failure(Exception("Token de usuario no disponible"))
             }
+            if (userId == null || userId == 0) {
+                return Result.failure(Exception("ID de usuario no disponible o inválido"))
+            }
+            remoteUserRepository.getUserProfile(userId, token)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -93,18 +95,20 @@ class UserRepository(context: Context) {
             val token = authManager.authToken.first()
             val userId = authManager.userId.first()
             
-            if (token != null && userId != null) {
-                val apiResult = remoteUserRepository.updateUserProfile(userId, user, token)
-                
-                if (apiResult.isSuccess) {
-                    val updatedUser = apiResult.getOrNull()!!
-                    sessionManager.updateUserName("${updatedUser.nombre} ${updatedUser.apellidos}")
-                    Result.success(updatedUser)
-                } else {
-                    Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Error al actualizar perfil"))
-                }
+            if (token.isNullOrEmpty()) {
+                return Result.failure(Exception("Token de usuario no disponible"))
+            }
+            if (userId == null || userId == 0) {
+                return Result.failure(Exception("ID de usuario no disponible o inválido"))
+            }
+            val apiResult = remoteUserRepository.updateUserProfile(userId, user, token)
+            
+            if (apiResult.isSuccess) {
+                val updatedUser = apiResult.getOrNull()!!
+                sessionManager.updateUserName("${updatedUser.nombre} ${updatedUser.apellidos}")
+                Result.success(updatedUser)
             } else {
-                Result.failure(Exception("Usuario no autenticado"))
+                Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Error al actualizar perfil"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -116,18 +120,20 @@ class UserRepository(context: Context) {
             val token = authManager.authToken.first()
             val userId = authManager.userId.first()
             
-            if (token != null && userId != null) {
-                val apiResult = remoteUserRepository.deleteUser(userId, token)
-                
-                if (apiResult.isSuccess) {
-                    sessionManager.clearUserSession()
-                    authManager.clearAuthData()
-                    Result.success(Unit)
-                } else {
-                    Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Error al eliminar usuario"))
-                }
+            if (token.isNullOrEmpty()) {
+                return Result.failure(Exception("Token de usuario no disponible"))
+            }
+            if (userId == null || userId == 0) {
+                return Result.failure(Exception("ID de usuario no disponible o inválido"))
+            }
+            val apiResult = remoteUserRepository.deleteUser(userId, token)
+            
+            if (apiResult.isSuccess) {
+                sessionManager.clearUserSession()
+                authManager.clearAuthData()
+                Result.success(Unit)
             } else {
-                Result.failure(Exception("Usuario no autenticado"))
+                Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Error al eliminar usuario"))
             }
         } catch (e: Exception) {
             Result.failure(e)

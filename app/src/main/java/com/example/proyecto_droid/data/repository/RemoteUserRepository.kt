@@ -82,7 +82,7 @@ class RemoteUserRepository(private val context: Context) {
     suspend fun getUserProfile(userId: Int, token: String): Result<User> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.getUser(userId, "Bearer $token")
+                val response = apiService.getUser(id = userId, token = "Bearer $token")
                 
                 if (response.success && response.data != null) {
                     Result.success(response.data)
@@ -106,7 +106,7 @@ class RemoteUserRepository(private val context: Context) {
     suspend fun updateUserProfile(userId: Int, user: User, token: String): Result<User> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.updateUser(userId, user, "Bearer $token")
+                val response = apiService.updateUser(id = userId, user = user, token = "Bearer $token")
                 
                 if (response.success && response.data != null) {
                     Result.success(response.data)
@@ -131,7 +131,7 @@ class RemoteUserRepository(private val context: Context) {
     suspend fun deleteUser(userId: Int, token: String): Result<Unit> {
         return withContext(Dispatchers.IO) {
             try {
-                val response = apiService.deleteUser(userId, "Bearer $token")
+                val response = apiService.deleteUser(id = userId, token = "Bearer $token")
                 
                 if (response.success) {
                     Result.success(Unit)

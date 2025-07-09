@@ -16,18 +16,18 @@ interface ApiService {
     suspend fun register(@Body registerRequest: RegisterRequest): ApiResponse<User>
     
     @GET("usuarios/{id}")
-    suspend fun getUser(@Path("id") userId: Int, @Header("Authorization") token: String): ApiResponse<User>
+    suspend fun getUser(@Path("id") id: Int, @Header("Authorization") token: String): ApiResponse<User>
     
     @PUT("usuarios/{id}")
     suspend fun updateUser(
-        @Path("id") userId: Int, 
+        @Path("id") id: Int, 
         @Body user: User, 
         @Header("Authorization") token: String
     ): ApiResponse<User>
     
     @DELETE("usuarios/{id}")
     suspend fun deleteUser(
-        @Path("id") userId: Int, 
+        @Path("id") id: Int, 
         @Header("Authorization") token: String
     ): ApiResponse<Unit>
 } 
