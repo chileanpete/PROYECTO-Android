@@ -30,4 +30,11 @@ interface ApiService {
         @Path("id") userId: Int, 
         @Header("Authorization") token: String
     ): ApiResponse<Unit>
+    
+    @POST("usuarios/{id}/cambiar-password")
+    suspend fun changePassword(
+        @Path("id") userId: Int,
+        @Body requestBody: Map<String, String>,
+        @Header("Authorization") token: String
+    ): ApiResponse<Unit>
 } 
