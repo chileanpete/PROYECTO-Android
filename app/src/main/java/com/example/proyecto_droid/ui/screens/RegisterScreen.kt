@@ -17,8 +17,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -355,14 +357,11 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
         }
     }
     
-    Box {
+    BoxWithConstraints {
+        val textFieldWidth = maxWidth
+        
         OutlinedTextField(
-            value = when(uiState.genero) {
-                "M" -> "Masculino"
-                "F" -> "Femenino"
-                "O" -> "Otro"
-                else -> ""
-            },
+            value = formatOptionText(uiState.genero),
             onValueChange = { },
             readOnly = true,
             label = { Text("Género *") },
@@ -383,22 +382,31 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
         DropdownMenu(
             expanded = generoExpanded,
             onDismissRequest = { generoExpanded = false },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .width(textFieldWidth)
+                .shadow(8.dp, RoundedCornerShape(12.dp))
+                .background(Color.White, RoundedCornerShape(12.dp))
         ) {
             uiState.generos.forEach { option ->
                 DropdownMenuItem(
                     text = { 
-                        Text(when(option) {
-                            "M" -> "Masculino"
-                            "F" -> "Femenino"
-                            "O" -> "Otro"
-                            else -> option
-                        })
+                        Text(
+                            text = formatOptionText(option),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (option == uiState.genero) GreenPrimary else Color.Black
+                        )
                     },
                     onClick = { 
                         viewModel.handleEvent(RegisterEvent.UpdateGenero(option))
                         generoExpanded = false
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    colors = MenuDefaults.itemColors(
+                        textColor = if (option == uiState.genero) GreenPrimary else Color.Black
+                    )
                 )
             }
         }
@@ -416,7 +424,9 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
         }
     }
     
-    Box {
+    BoxWithConstraints {
+        val textFieldWidth = maxWidth
+        
         OutlinedTextField(
             value = uiState.alturaCm,
             onValueChange = { },
@@ -440,16 +450,31 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
             expanded = alturaExpanded,
             onDismissRequest = { alturaExpanded = false },
             modifier = Modifier
-                .fillMaxWidth()
+                .width(textFieldWidth)
                 .height(200.dp)
+                .shadow(8.dp, RoundedCornerShape(12.dp))
+                .background(Color.White, RoundedCornerShape(12.dp))
         ) {
             uiState.alturas.forEach { altura ->
                 DropdownMenuItem(
-                    text = { Text(altura) },
+                    text = { 
+                        Text(
+                            text = altura,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (altura == uiState.alturaCm) GreenPrimary else Color.Black
+                        )
+                    },
                     onClick = { 
                         viewModel.handleEvent(RegisterEvent.UpdateAltura(altura))
                         alturaExpanded = false
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp),
+                    colors = MenuDefaults.itemColors(
+                        textColor = if (altura == uiState.alturaCm) GreenPrimary else Color.Black
+                    )
                 )
             }
         }
@@ -467,7 +492,9 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
         }
     }
     
-    Box {
+    BoxWithConstraints {
+        val textFieldWidth = maxWidth
+        
         OutlinedTextField(
             value = uiState.pesoKg,
             onValueChange = { },
@@ -491,16 +518,31 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
             expanded = pesoExpanded,
             onDismissRequest = { pesoExpanded = false },
             modifier = Modifier
-                .fillMaxWidth()
+                .width(textFieldWidth)
                 .height(200.dp)
+                .shadow(8.dp, RoundedCornerShape(12.dp))
+                .background(Color.White, RoundedCornerShape(12.dp))
         ) {
             uiState.pesos.forEach { peso ->
                 DropdownMenuItem(
-                    text = { Text(peso) },
+                    text = { 
+                        Text(
+                            text = peso,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (peso == uiState.pesoKg) GreenPrimary else Color.Black
+                        )
+                    },
                     onClick = { 
                         viewModel.handleEvent(RegisterEvent.UpdatePeso(peso))
                         pesoExpanded = false
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 2.dp),
+                    colors = MenuDefaults.itemColors(
+                        textColor = if (peso == uiState.pesoKg) GreenPrimary else Color.Black
+                    )
                 )
             }
         }
@@ -530,9 +572,11 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
         }
     }
     
-    Box {
+    BoxWithConstraints {
+        val textFieldWidth = maxWidth
+        
         OutlinedTextField(
-            value = uiState.nivelActividad,
+            value = formatOptionText(uiState.nivelActividad),
             onValueChange = { },
             readOnly = true,
             label = { Text("Nivel de actividad física *") },
@@ -553,15 +597,31 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
         DropdownMenu(
             expanded = nivelActividadExpanded,
             onDismissRequest = { nivelActividadExpanded = false },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .width(textFieldWidth)
+                .shadow(8.dp, RoundedCornerShape(12.dp))
+                .background(Color.White, RoundedCornerShape(12.dp))
         ) {
             uiState.nivelesActividad.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { 
+                        Text(
+                            text = formatOptionText(option),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (option == uiState.nivelActividad) GreenPrimary else Color.Black
+                        )
+                    },
                     onClick = { 
                         viewModel.handleEvent(RegisterEvent.UpdateNivelActividad(option))
                         nivelActividadExpanded = false
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    colors = MenuDefaults.itemColors(
+                        textColor = if (option == uiState.nivelActividad) GreenPrimary else Color.Black
+                    )
                 )
             }
         }
@@ -579,9 +639,11 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
         }
     }
     
-    Box {
+    BoxWithConstraints {
+        val textFieldWidth = maxWidth
+        
         OutlinedTextField(
-            value = uiState.objetivoPrincipal,
+            value = formatOptionText(uiState.objetivoPrincipal),
             onValueChange = { },
             readOnly = true,
             label = { Text("Objetivo principal *") },
@@ -602,17 +664,58 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
         DropdownMenu(
             expanded = objetivoExpanded,
             onDismissRequest = { objetivoExpanded = false },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .width(textFieldWidth)
+                .shadow(8.dp, RoundedCornerShape(12.dp))
+                .background(Color.White, RoundedCornerShape(12.dp))
         ) {
             uiState.objetivos.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option) },
+                    text = { 
+                        Text(
+                            text = formatOptionText(option),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (option == uiState.objetivoPrincipal) GreenPrimary else Color.Black
+                        )
+                    },
                     onClick = { 
                         viewModel.handleEvent(RegisterEvent.UpdateObjetivoPrincipal(option))
                         objetivoExpanded = false
-                    }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    colors = MenuDefaults.itemColors(
+                        textColor = if (option == uiState.objetivoPrincipal) GreenPrimary else Color.Black
+                    )
                 )
             }
         }
+    }
+}
+
+// Función para formatear opciones con guiones bajos
+private fun formatOptionText(option: String): String {
+    return when (option) {
+        // Niveles de actividad
+        "sedentario" -> "Sedentario"
+        "ligero" -> "Ligero"
+        "moderado" -> "Moderado"
+        "activo" -> "Activo"
+        "muy_activo" -> "Muy activo"
+        
+        // Objetivos
+        "perder_peso" -> "Perder peso"
+        "mantener_peso" -> "Mantener peso"
+        "ganar_peso" -> "Ganar peso"
+        "ganar_musculo" -> "Ganar músculo"
+        
+        // Géneros
+        "M" -> "Masculino"
+        "F" -> "Femenino"
+        "O" -> "Otro"
+        
+        else -> option.replace("_", " ").replaceFirstChar { it.uppercase() }
     }
 } 
