@@ -24,6 +24,7 @@ import com.example.proyecto_droid.ui.theme.BackgroundLight
 import com.example.proyecto_droid.ui.theme.GreenPrimary
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_droid.viewmodel.RegistroActividadViewModel
+import com.example.proyecto_droid.viewmodel.RegistroActividadViewModelFactory
 import com.example.proyecto_droid.viewmodel.RegistroActividadUiState
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
@@ -65,8 +66,10 @@ fun RegistroActividadScreen(
     modifier: Modifier = Modifier,
     idUsuario: Int = 1 // TODO: Reemplaza por el id real del usuario logueado
 ) {
-    val viewModel: RegistroActividadViewModel = viewModel()
     val context = LocalContext.current
+    val viewModel: RegistroActividadViewModel = viewModel(
+        factory = RegistroActividadViewModelFactory(context)
+    )
     val sessionManager = remember { SessionManager(context) }
     var idUsuario by remember { mutableStateOf<Int?>(null) }
     LaunchedEffect(idUsuario) {
@@ -241,7 +244,7 @@ fun RegistroActividadScreen(
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
                                     Text(
-                                        text = "Fecha: ${formatearFecha(registro.fecha_actividad)}",
+                                        text = "Fecha: ${formatearFecha(registro.fechaActividad)}",
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold
                                     )
@@ -251,7 +254,7 @@ fun RegistroActividadScreen(
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     Text(
-                                        text = "Duración: ${registro.duracion_minutos ?: "-"} min",
+                                        text = "Duración: ${registro.duracionMinutos ?: "-"} min",
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                     Text(

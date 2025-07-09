@@ -3,15 +3,13 @@ package com.example.proyecto_droid.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.proyecto_droid.model.RegistroConsumo
+import com.example.proyecto_droid.data.model.RegistroConsumo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import com.example.proyecto_droid.model.Plato
-import com.example.proyecto_droid.data.network.services.CrearRegistroConsumoRequest
-import com.example.proyecto_droid.data.network.services.RegistroConsumoService
-import com.example.proyecto_droid.data.network.services.ApiResponse
-import retrofit2.Response
+import com.example.proyecto_droid.data.model.Plato
+import com.example.proyecto_droid.data.network.UnifiedRetrofitClient
 import java.io.IOException
 import retrofit2.HttpException
 import android.util.Log
@@ -39,7 +37,7 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
     private val _platos = MutableStateFlow<List<Plato>>(emptyList())
     val platos: StateFlow<List<Plato>> = _platos
 
-    private val service: RegistroConsumoService = com.example.proyecto_droid.data.network.RetrofitClient.registroConsumoService
+    private val service = UnifiedRetrofitClient.getApiService(application)
 
     private val sharedPreferences: SharedPreferences = application.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
 
@@ -65,19 +63,51 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
         viewModelScope.launch {
             _uiState.value = RegistroConsumoUiState.Loading
             try {
-                val response = service.getRegistrosConsumo(idUsuario)
-                Log.d("RegistroConsumoVM", "Respuesta getRegistrosConsumo: ${response.body()}")
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val registros = response.body()?.data?.data ?: emptyList()
-                    Log.d("RegistroConsumoVM", "Registros recibidos: $registros")
+                // Verificar si el usuario está autenticado
+                val authManager = com.example.proyecto_droid.data.local.AuthManager(getApplication())
+                val token = authManager.authToken.first()
+                
+                if (token.isNullOrEmpty()) {
+                    Log.e("RegistroConsumoVM", "Usuario no autenticado - token vacío")
+                    _uiState.value = RegistroConsumoUiState.Error("Usuario no autenticado. Por favor inicia sesión.")
+                    return@launch
+                }
+                
+                Log.d("RegistroConsumoVM", "Cargando registros para usuario: $idUsuario")
+                val response = service.getConsumos(idUsuario, page = null)
+                Log.d("RegistroConsumoVM", "Respuesta getConsumos: success=${response.success}")
+                
+                if (response.isSuccessful() && response.data != null) {
+                    val registros = response.data.data
+                    Log.d("RegistroConsumoVM", "Registros recibidos: ${registros.size} elementos")
                     _uiState.value = RegistroConsumoUiState.Success(registros)
                 } else {
-                    Log.e("RegistroConsumoVM", "Error en getRegistrosConsumo: ${response.errorBody()?.string()}")
-                    _uiState.value = RegistroConsumoUiState.Error(response.body()?.message ?: "Error desconocido")
+                    val errorMsg = response.getErrorMessage()
+                    Log.e("RegistroConsumoVM", "Error en respuesta: $errorMsg")
+                    _uiState.value = RegistroConsumoUiState.Error(errorMsg)
                 }
+            } catch (e: com.google.gson.JsonSyntaxException) {
+                Log.e("RegistroConsumoVM", "Error de parsing JSON - respuesta malformada", e)
+                _uiState.value = RegistroConsumoUiState.Error("Error de formato en la respuesta del servidor. Intenta de nuevo.")
+            } catch (e: java.io.EOFException) {
+                Log.e("RegistroConsumoVM", "Error de JSON truncado - respuesta incompleta", e)
+                _uiState.value = RegistroConsumoUiState.Error("Respuesta incompleta del servidor. Verifica tu conexión e intenta de nuevo.")
+            } catch (e: retrofit2.HttpException) {
+                Log.e("RegistroConsumoVM", "Error HTTP ${e.code()}: ${e.message()}", e)
+                if (e.code() == 401) {
+                    _uiState.value = RegistroConsumoUiState.Error("Sesión expirada. Por favor inicia sesión nuevamente.")
+                } else {
+                    _uiState.value = RegistroConsumoUiState.Error("Error del servidor (${e.code()}). Intenta de nuevo más tarde.")
+                }
+            } catch (e: java.net.SocketTimeoutException) {
+                Log.e("RegistroConsumoVM", "Timeout de red", e)
+                _uiState.value = RegistroConsumoUiState.Error("Tiempo de espera agotado. Verifica tu conexión e intenta de nuevo.")
+            } catch (e: java.net.UnknownHostException) {
+                Log.e("RegistroConsumoVM", "Error de conectividad", e)
+                _uiState.value = RegistroConsumoUiState.Error("Sin conexión a internet. Verifica tu red e intenta de nuevo.")
             } catch (e: Exception) {
-                Log.e("RegistroConsumoVM", "Excepción en cargarRegistros", e)
-                _uiState.value = RegistroConsumoUiState.Error("Error: ${e.localizedMessage}")
+                Log.e("RegistroConsumoVM", "Excepción general en cargarRegistros", e)
+                _uiState.value = RegistroConsumoUiState.Error("Error inesperado: ${e.localizedMessage ?: e.message ?: "Error desconocido"}")
             }
         }
     }
@@ -85,16 +115,14 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
     fun cargarPlatos() {
         viewModelScope.launch {
             try {
-                val response = service.getPlatos()
-                Log.d("RegistroConsumoVM", "Código de respuesta: ${response.code()}")
-                Log.d("RegistroConsumoVM", "Respuesta exitosa: ${response.isSuccessful}")
-                Log.d("RegistroConsumoVM", "Respuesta getPlatos: ${response.body()}")
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val lista = response.body()?.data?.data ?: emptyList()
+                val response = service.getPlatos(page = null)
+                Log.d("RegistroConsumoVM", "Respuesta getPlatos: $response")
+                if (response.isSuccessful() && response.data != null) {
+                    val lista = response.data.data
                     Log.d("RegistroConsumoVM", "Platos recibidos: $lista")
                     _platos.value = lista
                 } else {
-                    Log.e("RegistroConsumoVM", "Error en respuesta getPlatos: ${response.errorBody()?.string()}")
+                    Log.e("RegistroConsumoVM", "Error en respuesta getPlatos: ${response.getErrorMessage()}")
                     _platos.value = emptyList()
                 }
             } catch (e: Exception) {
@@ -111,29 +139,9 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
         viewModelScope.launch {
             try {
                 Log.d("RegistroConsumoVM", "Iniciando exportación de PDF...")
-                val response = service.exportarPDF()
-                Log.d("RegistroConsumoVM", "Respuesta recibida: ${response.code()}")
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val pdfData = response.body()?.data
-                    if (pdfData != null) {
-                        Log.d("RegistroConsumoVM", "Datos PDF recibidos, guardando archivo...")
-                        val file = com.example.proyecto_droid.util.FileUtils.savePdfToDevice(context, pdfData.content, pdfData.filename)
-                        if (file != null) {
-                            pdfFile.value = file
-                            Log.d("RegistroConsumoVM", "PDF guardado exitosamente: ${file.absolutePath}")
-                        } else {
-                            Log.e("RegistroConsumoVM", "Error al guardar PDF en dispositivo")
-                            exportError.value = "Error al guardar el PDF en el dispositivo"
-                        }
-                    } else {
-                        Log.e("RegistroConsumoVM", "No se recibieron datos del PDF")
-                        exportError.value = "No se recibieron datos del PDF"
-                    }
-                } else {
-                    val errorMsg = response.body()?.message ?: "Error al generar PDF"
-                    Log.e("RegistroConsumoVM", "Error en respuesta: $errorMsg")
-                    exportError.value = errorMsg
-                }
+                // TODO: Implementar exportación de PDF cuando esté disponible en el UnifiedApiService
+                exportError.value = "Funcionalidad de exportación temporalmente deshabilitada"
+                Log.e("RegistroConsumoVM", "Exportación de PDF no implementada en UnifiedApiService")
             } catch (e: Exception) {
                 Log.e("RegistroConsumoVM", "Excepción durante exportación: ${e.localizedMessage}")
                 exportError.value = "Error: ${e.localizedMessage}"
@@ -174,46 +182,27 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
         saveError.value = null
         viewModelScope.launch {
             try {
-                val request = CrearRegistroConsumoRequest(
-                    id_plato = plato.idPlato ?: 0,
-                    fecha_consumo = fecha,
-                    hora_consumo = hora,
+                val nuevoConsumo = RegistroConsumo(
+                    idUsuario = getUserId(),
+                    idPlato = plato.idPlato ?: plato.id,
+                    fechaConsumo = fecha,
+                    horaConsumo = hora,
                     porciones = porciones,
+                    cantidad = porciones,
+                    caloriasTotales = (((plato.caloriasPorPorcion?.toDoubleOrNull() ?: 0.0) * porciones).toInt()),
                     valoracion = valoracion,
                     comentario = comentario,
-                    calorias_totales = (((plato.caloriasPorPorcion?.toDoubleOrNull() ?: 0.0) * porciones).toInt())
+                    plato = plato
                 )
-                Log.d("RegistroConsumoVM", "Enviando request: $request")
-                val response: Response<ApiResponse<RegistroConsumo>> = service.crearRegistroConsumo(request)
-                Log.d("RegistroConsumoVM", "Código de respuesta: ${response.code()}")
-                Log.d("RegistroConsumoVM", "Respuesta exitosa: ${response.isSuccessful}")
-                Log.d("RegistroConsumoVM", "Body de respuesta: ${response.body()}")
-                Log.d("RegistroConsumoVM", "Error body: ${response.errorBody()?.string()}")
+                Log.d("RegistroConsumoVM", "Enviando consumo: $nuevoConsumo")
+                val response = service.createConsumo(nuevoConsumo)
+                Log.d("RegistroConsumoVM", "Respuesta: $response")
                 
-                if (response.isSuccessful && response.body()?.success == true) {
+                if (response.isSuccessful() && response.data != null) {
                     Log.d("RegistroConsumoVM", "Registro guardado exitosamente")
                     cargarRegistros(getUserId()) // Refresca la lista con el ID del usuario
                 } else {
-                    var errorMsg: String? = null
-                    response.errorBody()?.let { errorBody ->
-                        errorMsg = errorBody.string()
-                        Log.e("RegistroConsumoVM", "Error body: $errorMsg")
-                    }
-                    if (errorMsg.isNullOrBlank()) {
-                        val apiMsg = response.body()?.message
-                        val apiErrors = response.body()?.errors
-                        errorMsg = buildString {
-                            if (!apiMsg.isNullOrBlank()) append(apiMsg)
-                            if (apiErrors != null && apiErrors.isNotEmpty()) {
-                                append("\n")
-                                apiErrors.forEach { (field, msgs) ->
-                                    append("$field: ")
-                                    append(msgs.joinToString(", "))
-                                    append("\n")
-                                }
-                            }
-                        }.ifBlank { "Error desconocido al guardar" }
-                    }
+                    val errorMsg = response.getErrorMessage()
                     Log.e("RegistroConsumoVM", "Error final: $errorMsg")
                     saveError.value = errorMsg
                 }

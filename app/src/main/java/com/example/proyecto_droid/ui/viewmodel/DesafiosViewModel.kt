@@ -1,16 +1,20 @@
 package com.example.proyecto_droid.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.proyecto_droid.data.model.Desafio
 import com.example.proyecto_droid.data.model.TipoDesafio
-import com.example.proyecto_droid.data.network.RetrofitClient
+import com.example.proyecto_droid.data.network.UnifiedRetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 
-class DesafiosViewModel : ViewModel() {
+class DesafiosViewModel(application: Application) : AndroidViewModel(application) {
+    
+    private val apiService = UnifiedRetrofitClient.getApiService(application)
+    
     private val _desafios = MutableStateFlow<List<Desafio>>(emptyList())
     val desafios: StateFlow<List<Desafio>> = _desafios
 
@@ -25,19 +29,11 @@ class DesafiosViewModel : ViewModel() {
         _error.value = null
         viewModelScope.launch {
             try {
-                val response = RetrofitClient.apiService.getDesafios()
-                _desafios.value = response.map {
-                    Desafio(
-                        id = it.id,
-                        titulo = it.titulo,
-                        descripcion = it.descripcion,
-                        tipo = when (it.tipo_desafio.lowercase()) {
-                            "actividad_fisica", "consistencia" -> TipoDesafio.DIARIO
-                            "peso", "nutricion" -> TipoDesafio.SEMANAL
-                            else -> TipoDesafio.DIARIO
-                        },
-                        objetivosRelacionados = it.objetivos_relacionados
-                    )
+                val response = apiService.getDesafios()
+                if (response.isSuccessful() && response.data != null) {
+                    _desafios.value = response.data.data
+                } else {
+                    _error.value = response.getErrorMessage()
                 }
             } catch (e: Exception) {
                 _error.value = "Error cargando desafíos: ${e.localizedMessage}"
