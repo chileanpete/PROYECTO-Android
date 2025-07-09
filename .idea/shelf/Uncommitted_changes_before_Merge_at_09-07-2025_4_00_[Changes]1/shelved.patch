@@ -1,0 +1,58 @@
+Index: app/src/main/java/com/example/proyecto_droid/data/remote/ApiService.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.proyecto_droid.data.remote\r\n\r\nimport retrofit2.Response\r\nimport retrofit2.http.GET\r\nimport retrofit2.http.Header\r\nimport com.example.proyecto_droid.model.TestResponse\r\nimport com.example.proyecto_droid.model.UserResponse\r\n\r\n\r\ninterface ApiService {\r\n    @GET(\"test\") // Ruta RELATIVA a BASE_URL\r\n    suspend fun testEndpoint(): Response<TestResponse> // Usa tu modelo de datos\r\n\r\n    // Ejemplo con autenticación:\r\n    @GET(\"user\")\r\n    suspend fun getUser(@Header(\"Authorization\") token: String): Response<UserResponse>\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/proyecto_droid/data/remote/ApiService.kt b/app/src/main/java/com/example/proyecto_droid/data/remote/ApiService.kt
+--- a/app/src/main/java/com/example/proyecto_droid/data/remote/ApiService.kt	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ b/app/src/main/java/com/example/proyecto_droid/data/remote/ApiService.kt	(date 1752047989072)
+@@ -8,7 +8,7 @@
+ 
+ 
+ interface ApiService {
+-    @GET("test") // Ruta RELATIVA a BASE_URL
++    @GET("api/test") // Ruta RELATIVA a BASE_URL
+     suspend fun testEndpoint(): Response<TestResponse> // Usa tu modelo de datos
+ 
+     // Ejemplo con autenticación:
+Index: .idea/shelf/Uncommitted_changes_before_Checkout_at_27-06-2025_16_21__Changes_.xml
+===================================================================
+diff --git a/.idea/shelf/Uncommitted_changes_before_Checkout_at_27-06-2025_16_21__Changes_.xml b/.idea/shelf/Uncommitted_changes_before_Checkout_at_27-06-2025_16_21__Changes_.xml
+deleted file mode 100644
+--- a/.idea/shelf/Uncommitted_changes_before_Checkout_at_27-06-2025_16_21__Changes_.xml	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ /dev/null	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
+@@ -1,4 +0,0 @@
+-<changelist name="Uncommitted_changes_before_Checkout_at_27-06-2025_16_21_[Changes]" date="1751055671568" recycled="true" deleted="true">
+-  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Checkout_at_27-06-2025_16_21_[Changes]/shelved.patch" />
+-  <option name="DESCRIPTION" value="Uncommitted changes before Checkout at 27-06-2025 16:21 [Changes]" />
+-</changelist>
+\ No newline at end of file
+Index: .idea/shelf/Uncommitted_changes_before_Update_at_28-06-2025_12_24__Changes_.xml
+===================================================================
+diff --git a/.idea/shelf/Uncommitted_changes_before_Update_at_28-06-2025_12_24__Changes_.xml b/.idea/shelf/Uncommitted_changes_before_Update_at_28-06-2025_12_24__Changes_.xml
+deleted file mode 100644
+--- a/.idea/shelf/Uncommitted_changes_before_Update_at_28-06-2025_12_24__Changes_.xml	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ /dev/null	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
+@@ -1,4 +0,0 @@
+-<changelist name="Uncommitted_changes_before_Update_at_28-06-2025_12_24_[Changes]" date="1751127844536" recycled="true" deleted="true">
+-  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_28-06-2025_12_24_[Changes]/shelved.patch" />
+-  <option name="DESCRIPTION" value="Uncommitted changes before Update at 28-06-2025 12:24 [Changes]" />
+-</changelist>
+\ No newline at end of file
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"ExternalStorageConfigurationManager\" enabled=\"true\" />\r\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_21\" default=\"true\" project-jdk-name=\"jbr-21\" project-jdk-type=\"JavaSDK\">\r\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\r\n  </component>\r\n  <component name=\"ProjectType\">\r\n    <option name=\"id\" value=\"Android\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ b/.idea/misc.xml	(date 1752047989070)
+@@ -1,4 +1,3 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="ExternalStorageConfigurationManager" enabled="true" />
+   <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="jbr-21" project-jdk-type="JavaSDK">

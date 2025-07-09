@@ -1,8 +1,8 @@
 package com.example.proyecto_droid
 
 import android.app.Application
-import com.example.proyecto_droid.data.AppContainer
-import com.example.proyecto_droid.data.AppDataContainer
+import com.example.proyecto_droid.data.model.AppContainer
+import com.example.proyecto_droid.data.model.AppDataContainer
 
 class Proyecto_droid : Application() {
 

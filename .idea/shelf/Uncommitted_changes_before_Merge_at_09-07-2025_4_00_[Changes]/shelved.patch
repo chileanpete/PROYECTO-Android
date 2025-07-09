@@ -1,0 +1,204 @@
+Index: app/src/main/java/com/example/proyecto_droid/data/remote/ApiClient.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.proyecto_droid.data.remote\r\n\r\nimport retrofit2.Retrofit\r\nimport okhttp3.OkHttpClient\r\nimport android.content.Context\r\nimport com.google.gson.GsonBuilder\r\nimport okhttp3.logging.HttpLoggingInterceptor\r\nimport retrofit2.converter.gson.GsonConverterFactory\r\nimport java.util.concurrent.TimeUnit\r\n\r\nobject ApiClient {\r\n    private const val BASE_URL = \"http://10.0.2.2:8000/api/\"\r\n\r\n    // Método renombrado a createRetrofit()\r\n    fun createRetrofit(context: Context): Retrofit {\r\n        return Retrofit.Builder()\r\n            .baseUrl(BASE_URL)\r\n            .client(\r\n                OkHttpClient.Builder()\r\n                    .addInterceptor(AuthInterceptor(context))\r\n                    .addInterceptor(HttpLoggingInterceptor().apply {\r\n                        level = HttpLoggingInterceptor.Level.BODY\r\n                    })\r\n                    .connectTimeout(30, TimeUnit.SECONDS)\r\n                    .build()\r\n            )\r\n            .addConverterFactory(GsonConverterFactory.create())\r\n            .build()\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/example/proyecto_droid/data/remote/ApiClient.kt b/app/src/main/java/com/example/proyecto_droid/data/remote/ApiClient.kt
+--- a/app/src/main/java/com/example/proyecto_droid/data/remote/ApiClient.kt	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ b/app/src/main/java/com/example/proyecto_droid/data/remote/ApiClient.kt	(date 1752047989071)
+@@ -9,15 +9,14 @@
+ import java.util.concurrent.TimeUnit
+ 
+ object ApiClient {
+-    private const val BASE_URL = "http://10.0.2.2:8000/api/"
++    private const val BASE_URL = "http://10.0.2.2:8000/"  // Sin /api/ aquí
+ 
+-    // Método renombrado a createRetrofit()
+     fun createRetrofit(context: Context): Retrofit {
+         return Retrofit.Builder()
+             .baseUrl(BASE_URL)
+             .client(
+                 OkHttpClient.Builder()
+-                    .addInterceptor(AuthInterceptor(context))
++                    .addInterceptor(AuthInterceptor(context)) // Tu interceptor personalizado
+                     .addInterceptor(HttpLoggingInterceptor().apply {
+                         level = HttpLoggingInterceptor.Level.BODY
+                     })
+Index: app/src/main/java/com/example/proyecto_droid/data/AppDataContainer.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.proyecto_droid.data\r\n\r\nimport android.content.Context\r\nimport com.example.proyecto_droid.data.remote.ApiClient\r\nimport com.example.proyecto_droid.data.remote.ApiService\r\nimport com.example.proyecto_droid.data.remote.services.PlatoServices\r\nimport com.example.proyecto_droid.data.remote.services.AuthService\r\nimport com.example.proyecto_droid.data.remote.services.LugarService\r\nimport retrofit2.Retrofit\r\nimport retrofit2.create\r\n\r\ninterface AppContainer{\r\n    val platoApiService: PlatoServices\r\n    val lugarApiService:LugarService\r\n    val authApiService: AuthService\r\n\r\n}\r\n\r\nclass AppDataContainer(private val context: Context) :com.example.proyecto_droid.data.AppContainer {\r\n    private val retrofit: Retrofit by lazy {\r\n        ApiClient.createRetrofit(context)\r\n    }\r\n\r\n    // 2. Implementa las propiedades correctamente\r\n    override val platoApiService: PlatoServices by lazy {\r\n        retrofit.create<PlatoServices>()\r\n    }\r\n\r\n    override val lugarApiService: LugarService by lazy {\r\n        retrofit.create<LugarService>()\r\n    }\r\n\r\n    override val authApiService: AuthService by lazy {\r\n        retrofit.create<AuthService>()\r\n    }\r\n}\r\n\r\n
+===================================================================
+diff --git a/app/src/main/java/com/example/proyecto_droid/data/AppDataContainer.kt b/app/src/main/java/com/example/proyecto_droid/data/AppDataContainer.kt
+--- a/app/src/main/java/com/example/proyecto_droid/data/AppDataContainer.kt	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ b/app/src/main/java/com/example/proyecto_droid/data/AppDataContainer.kt	(date 1752047989070)
+@@ -23,15 +23,15 @@
+ 
+     // 2. Implementa las propiedades correctamente
+     override val platoApiService: PlatoServices by lazy {
+-        retrofit.create<PlatoServices>()
++        retrofit.create(PlatoServices::class.java)
+     }
+ 
+     override val lugarApiService: LugarService by lazy {
+-        retrofit.create<LugarService>()
++        retrofit.create(LugarService::class.java)
+     }
+ 
+     override val authApiService: AuthService by lazy {
+-        retrofit.create<AuthService>()
++        retrofit.create(AuthService::class.java)
+     }
+ }
+ 
+Index: app/src/main/java/com/example/proyecto_droid/ui/screens/platos/AddPlatoScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.proyecto_droid.ui.screens.platos\r\n\r\nimport androidx.compose.foundation.layout.Arrangement\r\nimport androidx.compose.foundation.layout.Column\r\nimport androidx.compose.foundation.layout.Spacer\r\nimport androidx.compose.foundation.layout.fillMaxSize\r\nimport androidx.compose.foundation.layout.fillMaxWidth\r\nimport androidx.compose.foundation.layout.height\r\nimport androidx.compose.foundation.layout.padding\r\nimport androidx.compose.material3.Button\r\nimport androidx.compose.material3.CircularProgressIndicator\r\nimport androidx.compose.material3.MaterialTheme\r\nimport androidx.compose.material3.OutlinedTextField\r\nimport androidx.compose.material3.Text\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.runtime.LaunchedEffect\r\nimport androidx.compose.runtime.getValue\r\nimport androidx.compose.runtime.mutableStateOf\r\nimport androidx.compose.runtime.remember\r\nimport androidx.compose.runtime.setValue\r\nimport androidx.compose.ui.Alignment\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.text.input.PasswordVisualTransformation\r\nimport androidx.compose.ui.unit.dp\r\nimport androidx.lifecycle.viewmodel.compose.viewModel\r\nimport androidx.navigation.NavController\r\nimport com.example.proyecto_droid.ui.screens.auth.AuthUiState\r\n\r\n@Composable\r\nfun AddPlatoScreen(\r\n    viewModel: PlatosViewModel = viewModel(\r\n        factory =  com.example.proyecto_droid.ui.AppViewModelProvider.Factory\r\n\r\n    ),\r\n    navController: NavController\r\n) {\r\n    LaunchedEffect(Unit) {\r\n        viewModel.resetUiState()\r\n    }\r\n\r\n    var idLugarText by remember { mutableStateOf(\"\") }\r\n    var idCategoriaText by remember { mutableStateOf(\"\") }\r\n    var nombrePlato by remember { mutableStateOf(\"\") }\r\n    var descripcionPlato by remember { mutableStateOf(\"\") }\r\n    var precioPlatoText by remember { mutableStateOf(\"\") }\r\n    var caloriasPlatoText by remember { mutableStateOf(\"\") }\r\n    var protePlatoText by remember { mutableStateOf(\"\") }\r\n    var carbPlatoText by remember { mutableStateOf(\"\") }\r\n    var grasaPlatoText by remember { mutableStateOf(\"\") }\r\n    var fibraPlatoText by remember { mutableStateOf(\"\") }\r\n    var azucarPlatoText by remember { mutableStateOf(\"\") }\r\n    var sodioPlatoText by remember { mutableStateOf(\"\") }\r\n    var disponibilidadPlato by remember { mutableStateOf(true) }\r\n    var esVegetariano by remember { mutableStateOf(false) }\r\n    var esVegano by remember { mutableStateOf(false) }\r\n    var sinGluten by remember { mutableStateOf(false) }\r\n    var imagenUrl by remember { mutableStateOf(\"\") }\r\n    //var fechaCreacion by remember {java.time.LocalDateTime.now().toString() }\r\n\r\n\r\n\r\n\r\n    val platosState = viewModel.platosUiState\r\n    var shouldRedirect by remember { mutableStateOf(true) }\r\n\r\n    // Redirección si se agregó la tarea con éxito\r\n    LaunchedEffect(platosState) {\r\n        if (shouldRedirect && platosState is PlatosUiState.Success) {\r\n            shouldRedirect = false\r\n            navController.popBackStack()\r\n        }\r\n    }\r\n    val idLugar = idLugarText.toIntOrNull() ?:0\r\n    val idCategoria = idCategoriaText.toIntOrNull() ?:0\r\n    val precioPlato =precioPlatoText.toDoubleOrNull() ?:0.0\r\n    val caloriasPlato = caloriasPlatoText.toIntOrNull() ?:0\r\n    val protePlato =protePlatoText.toDoubleOrNull() ?:0.0\r\n    val carbPlato =carbPlatoText.toDoubleOrNull() ?:0.0\r\n    val grasaPlato =grasaPlatoText.toDoubleOrNull() ?:0.0\r\n    val fibraPlato =fibraPlatoText.toDoubleOrNull() ?:0.0\r\n    val azucarPlato =azucarPlatoText.toDoubleOrNull() ?:0.0\r\n    val sodioPlato =sodioPlatoText.toDoubleOrNull() ?:0.0\r\n\r\n    //\r\n    // Despues anado el resto de campos de textso de abajo\r\n    //\r\n    Column(\r\n        modifier = Modifier\r\n            .fillMaxSize()\r\n            .padding(24.dp),\r\n        verticalArrangement = Arrangement.Center,\r\n        horizontalAlignment = Alignment.CenterHorizontally\r\n    ) {\r\n\r\n        Text(text = \"Añadir Plato\", style = MaterialTheme.typography.headlineMedium)\r\n\r\n        Spacer(modifier = Modifier.height(16.dp))\r\n\r\n        OutlinedTextField(\r\n            value = idLugarText,\r\n            onValueChange = { idLugarText = it },\r\n            label = { Text(\"Id Lugar\") },\r\n            modifier = Modifier.fillMaxWidth()\r\n        )\r\n        Spacer(modifier = Modifier.height(8.dp))\r\n        OutlinedTextField(\r\n            value = idCategoriaText,\r\n            onValueChange = { idCategoriaText = it },\r\n            label = { Text(\"Id Categoria\") },\r\n            modifier = Modifier.fillMaxWidth()\r\n        )\r\n\r\n        Spacer(modifier = Modifier.height(16.dp))\r\n\r\n        Button(\r\n            onClick = { viewModel.addPlato(idLugar,idCategoria,nombrePlato,descripcionPlato,precioPlato, caloriasPlato,protePlato,\r\n                carbPlato,grasaPlato,fibraPlato,azucarPlato, sodioPlato, disponibilidadPlato,esVegetariano, esVegano,\r\n                sinGluten, imagenUrl) },\r\n            modifier = Modifier.fillMaxWidth()\r\n        ) {\r\n            Text(\"Agregar Plato\")\r\n        }\r\n\r\n        Spacer(modifier = Modifier.height(24.dp))\r\n\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/AddPlatoScreen.kt b/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/AddPlatoScreen.kt
+--- a/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/AddPlatoScreen.kt	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ b/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/AddPlatoScreen.kt	(date 1752047989073)
+@@ -92,7 +92,7 @@
+         horizontalAlignment = Alignment.CenterHorizontally
+     ) {
+ 
+-        Text(text = "Añadir Plato", style = MaterialTheme.typography.headlineMedium)
++        Text(text = "Añadireeee Plato", style = MaterialTheme.typography.headlineMedium)
+ 
+         Spacer(modifier = Modifier.height(16.dp))
+ 
+Index: app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.proyecto_droid.ui.screens.platos\r\n\r\nimport android.util.Log\r\nimport androidx.compose.runtime.getValue\r\nimport androidx.compose.runtime.mutableStateOf\r\nimport androidx.compose.runtime.setValue\r\nimport androidx.lifecycle.ViewModel\r\nimport androidx.lifecycle.viewModelScope\r\nimport com.example.proyecto_droid.data.model.Plato\r\nimport com.example.proyecto_droid.data.remote.services.PlatoServices\r\nimport kotlinx.coroutines.launch\r\n\r\nsealed class PlatosUiState{\r\n    data class Success(val platos: List<Plato>) : PlatosUiState()\r\n    data class Error(val message: String) : PlatosUiState()\r\n    object Loading : PlatosUiState()\r\n    object Idle : PlatosUiState()\r\n}\r\n\r\nclass PlatosViewModel(\r\nprivate val platoServices: PlatoServices\r\n): ViewModel(){\r\n    var platosUiState: PlatosUiState by mutableStateOf(PlatosUiState.Loading)\r\n        private set\r\n\r\n    fun resetUiState() {\r\n        platosUiState = PlatosUiState.Idle\r\n    }\r\n\r\n    private fun getPlatos(){\r\n        viewModelScope.launch {\r\n            platosUiState = PlatosUiState.Loading\r\n            platosUiState = try {\r\n                val listPlatos = platoServices.getPlatos()\r\n                PlatosUiState.Success(listPlatos)\r\n            } catch (e: Exception) {\r\n                PlatosUiState.Error(e.message ?: \"Error desconocido\")\r\n            }\r\n        }\r\n    }\r\n\r\n    fun refreshPlatos() {\r\n        getPlatos()\r\n    }\r\n\r\n    fun addPlato(idLugar:Int,idCategoria:Int,nombrePlato:String,descripcionPlato: String, precioPlato: Double, caloriasPlato: Int, protePlato:Double,\r\n                  carbPlato: Double, grasaPlato: Double, fibraPlato: Double, azucarPlato: Double, sodioPlato: Double,\r\n                  disponibilidadPlato: Boolean, esVegetariano: Boolean, esVegano: Boolean, sinGluten: Boolean,\r\n                  imagenUrl: String) {\r\n        viewModelScope.launch {\r\n            platosUiState = PlatosUiState.Loading\r\n            try {\r\n                platoServices.addPlato(Plato(0,idLugar,idCategoria,nombrePlato,descripcionPlato,precioPlato,\r\n                    caloriasPlato,protePlato,carbPlato,grasaPlato,fibraPlato,azucarPlato,sodioPlato,disponibilidadPlato,\r\n                    esVegetariano,esVegano,sinGluten,imagenUrl))\r\n                val updatedList = platoServices.getPlatos()\r\n                platosUiState = PlatosUiState.Success(updatedList)\r\n            } catch (e: Exception) {\r\n                platosUiState = PlatosUiState.Error(e.message ?: \"Error al agregar plato\")\r\n            }\r\n        }\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosViewModel.kt b/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosViewModel.kt
+--- a/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosViewModel.kt	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ b/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosViewModel.kt	(date 1752047989076)
+@@ -15,6 +15,7 @@
+     data class Error(val message: String) : PlatosUiState()
+     object Loading : PlatosUiState()
+     object Idle : PlatosUiState()
++    object Empty : PlatosUiState()
+ }
+ 
+ class PlatosViewModel(
+@@ -27,20 +28,25 @@
+         platosUiState = PlatosUiState.Idle
+     }
+ 
+-    private fun getPlatos(){
++    private fun getPlatos(idLugar: Int){
+         viewModelScope.launch {
+             platosUiState = PlatosUiState.Loading
+             platosUiState = try {
+-                val listPlatos = platoServices.getPlatos()
+-                PlatosUiState.Success(listPlatos)
++                val listPlatos = platoServices.getPlatos(idLugar)
++                when{
++                    listPlatos.isEmpty()-> PlatosUiState.Empty
++                    else->
++                    PlatosUiState.Success(listPlatos)
++                }
++
+             } catch (e: Exception) {
+                 PlatosUiState.Error(e.message ?: "Error desconocido")
+             }
+         }
+     }
+ 
+-    fun refreshPlatos() {
+-        getPlatos()
++    fun refreshPlatos(idLugar: Int) {
++        getPlatos(idLugar)
+     }
+ 
+     fun addPlato(idLugar:Int,idCategoria:Int,nombrePlato:String,descripcionPlato: String, precioPlato: Double, caloriasPlato: Int, protePlato:Double,
+@@ -53,7 +59,7 @@
+                 platoServices.addPlato(Plato(0,idLugar,idCategoria,nombrePlato,descripcionPlato,precioPlato,
+                     caloriasPlato,protePlato,carbPlato,grasaPlato,fibraPlato,azucarPlato,sodioPlato,disponibilidadPlato,
+                     esVegetariano,esVegano,sinGluten,imagenUrl))
+-                val updatedList = platoServices.getPlatos()
++                val updatedList = platoServices.getPlatos(idLugar)
+                 platosUiState = PlatosUiState.Success(updatedList)
+             } catch (e: Exception) {
+                 platosUiState = PlatosUiState.Error(e.message ?: "Error al agregar plato")
+Index: app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.proyecto_droid.ui.screens.platos\r\n\r\nimport androidx.compose.foundation.layout.Column\r\nimport androidx.compose.foundation.layout.PaddingValues\r\nimport androidx.compose.foundation.layout.fillMaxSize\r\nimport androidx.compose.foundation.layout.fillMaxWidth\r\nimport androidx.compose.foundation.layout.padding\r\nimport androidx.compose.foundation.lazy.grid.GridCells\r\nimport androidx.compose.foundation.lazy.grid.LazyVerticalGrid\r\nimport androidx.compose.foundation.lazy.grid.items\r\nimport androidx.compose.material.icons.Icons\r\nimport androidx.compose.material.icons.filled.Add\r\nimport androidx.compose.material3.Card\r\nimport androidx.compose.material3.CardDefaults\r\nimport androidx.compose.material3.FloatingActionButton\r\nimport androidx.compose.material3.Icon\r\nimport androidx.compose.material3.Scaffold\r\nimport androidx.compose.material3.Text\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.runtime.LaunchedEffect\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.unit.dp\r\nimport androidx.lifecycle.viewmodel.compose.viewModel\r\nimport androidx.navigation.NavController\r\nimport com.example.proyecto_droid.data.model.Plato\r\nimport com.example.proyecto_droid.ui.Routes\r\n\r\n\r\n\r\n@Composable\r\nfun PlatosScreen(\r\n    viewModel: PlatosViewModel = viewModel(\r\n        factory = com.example.proyecto_droid.ui.AppViewModelProvider.Factory\r\n    ),\r\n    navController: NavController\r\n) {\r\n    LaunchedEffect(Unit) {\r\n        viewModel.refreshPlatos()\r\n    }\r\n    Scaffold(\r\n        floatingActionButton = {\r\n            FloatingActionButton(onClick = {navController.navigate(Routes.ADD_PLATO)}) {\r\n                Icon(Icons.Default.Add, contentDescription = \"Agregar Usuario\")\r\n            }\r\n        }\r\n    ) {\r\n            innerPadding ->\r\n        Column(modifier = Modifier.padding(innerPadding)) {\r\n            when (val state = viewModel.platosUiState) {\r\n                is PlatosUiState.Loading -> {\r\n                    Text(text = \"Cargando patos...\")\r\n                }\r\n\r\n                is PlatosUiState.Error -> {\r\n                    Text(text = \"Error: ${state.message}\")\r\n                }\r\n\r\n                is PlatosUiState.Success -> {\r\n                    LazyVerticalGrid(columns = GridCells.Fixed(1)) {\r\n                        items(state.platos.size) { index ->\r\n                            PlatoCard(plato = state.platos[index])\r\n                        }\r\n                    }\r\n                }\r\n\r\n                else -> {}\r\n            }\r\n        }\r\n    }\r\n}\r\n\r\n@Composable\r\nprivate fun PlatoList(\r\n    platos: List<Plato>,\r\n    modifier: Modifier = Modifier\r\n) {\r\n    LazyVerticalGrid(\r\n        columns = GridCells.Adaptive(minSize = 300.dp),\r\n        modifier = modifier.fillMaxSize(),\r\n        contentPadding = PaddingValues(8.dp)\r\n    ) {\r\n        items(\r\n            items = platos,\r\n            key = { it.id } // Opcional para mejor rendimiento\r\n        ) { plato ->\r\n            PlatoCard(plato = plato)\r\n        }\r\n    }\r\n}\r\n\r\n@Composable\r\nfun PlatoCard(\r\n    plato: Plato,\r\n) {\r\n    Card(\r\n        modifier = Modifier\r\n            .fillMaxWidth()\r\n            .padding(8.dp),\r\n        elevation = CardDefaults.cardElevation(4.dp)\r\n    ) {\r\n        Column(\r\n            modifier = Modifier\r\n                .padding(8.dp)\r\n        ) {\r\n            Text(text = \"ID: ${plato.id}\")\r\n            Text(text = \"Nombre: ${plato.nombrePlato}\")\r\n            Text(text = \"Descripción: ${plato.descripcionPlato ?: \"No hay descripción\"}\")\r\n        }\r\n    }\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosScreen.kt b/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosScreen.kt
+--- a/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosScreen.kt	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ b/app/src/main/java/com/example/proyecto_droid/ui/screens/platos/PlatosScreen.kt	(date 1752047989074)
+@@ -10,6 +10,8 @@
+ import androidx.compose.foundation.lazy.grid.items
+ import androidx.compose.material.icons.Icons
+ import androidx.compose.material.icons.filled.Add
++import androidx.compose.material.icons.outlined.Info
++import androidx.compose.material3.Button
+ import androidx.compose.material3.Card
+ import androidx.compose.material3.CardDefaults
+ import androidx.compose.material3.FloatingActionButton
+@@ -18,6 +20,7 @@
+ import androidx.compose.material3.Text
+ import androidx.compose.runtime.Composable
+ import androidx.compose.runtime.LaunchedEffect
++import androidx.compose.runtime.remember
+ import androidx.compose.ui.Modifier
+ import androidx.compose.ui.unit.dp
+ import androidx.lifecycle.viewmodel.compose.viewModel
+@@ -33,9 +36,9 @@
+         factory = com.example.proyecto_droid.ui.AppViewModelProvider.Factory
+     ),
+     navController: NavController
+-) {
++) { val idLugar = remember{1}
+     LaunchedEffect(Unit) {
+-        viewModel.refreshPlatos()
++        viewModel.refreshPlatos(idLugar)
+     }
+     Scaffold(
+         floatingActionButton = {
+@@ -50,6 +53,16 @@
+                 is PlatosUiState.Loading -> {
+                     Text(text = "Cargando patos...")
+                 }
++                is PlatosUiState.Empty->{
++                    Icon(
++                        imageVector = Icons.Outlined.Info,
++                        contentDescription = "Vacío"
++                    )
++                    Text("No hay platos disponibles")
++                    Button(onClick = { /* Navegar a AddPlatoScreen */ }) {
++                        Text("Agregar primer plato")
++                    }
++                }
+ 
+                 is PlatosUiState.Error -> {
+                     Text(text = "Error: ${state.message}")
+Index: app/src/main/java/com/example/proyecto_droid/data/remote/services/PlatoServices.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.proyecto_droid.data.remote.services\r\n\r\nimport com.example.proyecto_droid.data.model.Plato\r\nimport retrofit2.http.Body\r\nimport retrofit2.http.GET\r\nimport retrofit2.http.POST\r\n\r\ninterface PlatoServices {\r\n    @GET(\"api/platos\")\r\n    suspend fun getPlatos(): List<Plato>\r\n\r\n    @POST(\"api/platos\")\r\n    suspend fun addPlato(@Body plato: Plato): Plato\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/example/proyecto_droid/data/remote/services/PlatoServices.kt b/app/src/main/java/com/example/proyecto_droid/data/remote/services/PlatoServices.kt
+--- a/app/src/main/java/com/example/proyecto_droid/data/remote/services/PlatoServices.kt	(revision 455d2b5ad18607b9e167dad4181bef387d4f3c94)
++++ b/app/src/main/java/com/example/proyecto_droid/data/remote/services/PlatoServices.kt	(date 1752047989072)
+@@ -4,10 +4,13 @@
+ import retrofit2.http.Body
+ import retrofit2.http.GET
+ import retrofit2.http.POST
++import retrofit2.http.Path
+ 
+ interface PlatoServices {
+-    @GET("api/platos")
+-    suspend fun getPlatos(): List<Plato>
++    @GET("api/platos/{id_lugar}")
++    suspend fun getPlatos(@Path("id_lugar") idLugar:Int): List<Plato>
++
++
+ 
+     @POST("api/platos")
+     suspend fun addPlato(@Body plato: Plato): Plato
