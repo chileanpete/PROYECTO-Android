@@ -1,0 +1,355 @@
+package com.example.proyecto_droid
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import android.widget.Toast
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.example.proyecto_droid.ui.screens.AddTallerScreen
+import com.example.proyecto_droid.ui.screens.LoginScreen
+import com.example.proyecto_droid.ui.screens.RegisterScreen
+import com.example.proyecto_droid.ui.screens.HomeScreen
+import com.example.proyecto_droid.ui.screens.NutritionScreen
+import com.example.proyecto_droid.ui.screens.ExerciseScreen
+import com.example.proyecto_droid.ui.screens.ProfileScreen
+import com.example.proyecto_droid.ui.viewmodel.SessionViewModel
+import com.example.proyecto_droid.ui.theme.BackgroundLight
+import com.example.proyecto_droid.ui.theme.GreenPrimary
+import com.example.proyecto_droid.ui.theme.LightGrayText
+import com.example.proyecto_droid.ui.theme.Proyecto_droidTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            Proyecto_droidTheme {
+                val navController = rememberNavController()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = BackgroundLight
+                ) {
+                    AppNavHost(navController)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AppNavHost(navController: NavHostController) {
+    val sessionViewModel: SessionViewModel = viewModel()
+    val sessionState by sessionViewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(sessionState) {
+        if (!sessionState.isLoading) {
+            if (sessionState.isLoggedIn) {
+                if (navController.currentDestination?.route != "main") {
+                    navController.navigate("main") {
+                        popUpTo("login") { inclusive = true }
+                    }
+                }
+            } else {
+                if (navController.currentDestination?.route != "login") {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            }
+        }
+    }
+
+    NavHost(
+        navController = navController,
+        startDestination = "login"
+    ) {
+        composable("login") {
+            LoginScreen(navController, sessionViewModel)
+        }
+        composable("register") {
+            RegisterScreen(navController, sessionViewModel)
+        }
+        composable("forgot") {
+            ForgotPasswordScreen(navController)
+        }
+        composable("main") {
+            MainScaffold(sessionViewModel, navController) // Cambiado de MainScaffold
+        }
+        composable("add_taller/{fecha}") { backStackEntry ->
+            val fecha = backStackEntry.arguments?.getString("fecha") ?: ""
+            AddTallerScreen(fecha, viewModel(), navController)
+        }
+
+        // Agrega aquí las pantallas que estaban en el NavHost interno
+        composable("home") { HomeScreen(navController, sessionViewModel) }
+        composable("nutrition") { NutritionScreen(viewModel = viewModel()) }
+        composable("exercise") { ExerciseScreen() }
+        composable("profile") { ProfileScreen() }
+    }
+}
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun MainScaffold(sessionViewModel: SessionViewModel, navController: NavHostController) {
+    var selectedIndex by remember { mutableStateOf(0) }
+
+    Scaffold(
+        containerColor = BackgroundLight,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = when (selectedIndex) {
+                            0 -> "Inicio"
+                            1 -> "Comida"
+                            2 -> "Ejercicio"
+                            3 -> "Perfil"
+                            else -> ""
+                        },
+                        color = Color.White
+                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = GreenPrimary
+                ),
+                modifier = Modifier.height(56.dp)
+            )
+        },
+        bottomBar = {
+            NavigationBar(containerColor = BackgroundLight) {
+                NavigationBarItem(
+                    selected = selectedIndex == 0,
+                    onClick = {
+                        selectedIndex = 0
+                        navController.navigate("home") {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(painterResource(id = R.drawable.ic_launcher_foreground), contentDescription = "Home") },
+                    label = { Text("Inicio") }
+                )
+                NavigationBarItem(
+                    selected = selectedIndex == 1,
+                    onClick = {
+                        selectedIndex = 1
+                        navController.navigate("nutrition") {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(painterResource(id = R.drawable.ic_nutrition), contentDescription = "Comida") },
+                    label = { Text("Comida") }
+                )
+                NavigationBarItem(
+                    selected = selectedIndex == 2,
+                    onClick = {
+                        selectedIndex = 2
+                        navController.navigate("exercise") {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(painterResource(id = R.drawable.ic_exercise), contentDescription = "Ejercicio") },
+                    label = { Text("Ejercicio") }
+                )
+                NavigationBarItem(
+                    selected = selectedIndex == 3,
+                    onClick = {
+                        selectedIndex = 3
+                        navController.navigate("profile") {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    icon = { Icon(painterResource(id = R.drawable.ic_profile), contentDescription = "Perfil") },
+                    label = { Text("Perfil") }
+                )
+            }
+        }
+    ) { innerPadding ->
+        // Muestra el contenido basado en la ruta actual
+        when (navController.currentDestination?.route) {
+            "home" -> HomeScreen(navController, sessionViewModel)
+            "nutrition" -> NutritionScreen(viewModel = viewModel())
+            "exercise" -> ExerciseScreen()
+            "profile" -> ProfileScreen()
+            else -> HomeScreen(navController, sessionViewModel)
+        }.let { content ->
+            Box(modifier = Modifier.padding(innerPadding)) {
+                content
+            }
+        }
+    }
+}
+
+@Composable
+fun ForgotPasswordScreen(navController: NavHostController) {
+    var email by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
+
+    fun validate(): Boolean {
+        return email.isNotBlank()
+    }
+
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundLight),
+        contentAlignment = Alignment.Center
+    ) {
+        val maxWidth = maxWidth
+        val horizontalPadding = if (maxWidth < 400.dp) 16.dp else 32.dp
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = horizontalPadding)
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(
+                text = "Recuperar Contraseña",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = GreenPrimary,
+                    fontSize = 32.sp
+                ),
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = "Te enviaremos un correo para restablecer tu contraseña",
+                color = LightGrayText,
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Correo electrónico") },
+                singleLine = true,
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = GreenPrimary,
+                    unfocusedBorderColor = LightGrayText
+                )
+            )
+            if (error != null) {
+                Text(error!!, color = MaterialTheme.colorScheme.error)
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = {
+                if (!validate()) {
+                    error = "Introduce tu correo."
+                } else {
+                    Toast.makeText(context, "¡Correo enviado! (simulado)", Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
+                }
+            },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+            ) {
+                Text("Enviar", color = Color.White, fontSize = 18.sp)
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Button(onClick = { navController.popBackStack() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+            ) {
+                Text("Volver", color = GreenPrimary, fontSize = 18.sp)
+            }
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+fun SocialIconButton(iconRes: Int, contentDescription: String, onClick: () -> Unit) {
+    Surface(
+        shape = CircleShape,
+        color = Color.White,
+        shadowElevation = 4.dp,
+        modifier = Modifier
+            .size(48.dp)
+            .clickable { onClick() }
+    ) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = contentDescription,
+                tint = Color.Unspecified,
+                modifier = Modifier.size(28.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun MainAppScreen(navController: NavHostController) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(BackgroundLight),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(32.dp)
+        ) {
+            Text(
+                text = "Vida Sana UCSC",
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    color = GreenPrimary,
+                    fontSize = 32.sp
+                ),
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            Text(
+                text = "¡Bienvenido a tu app de vida saludable!",
+                color = LightGrayText,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+            Button(
+                onClick = {
+                    navController.navigate("login") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(24.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+            ) {
+                Text("Cerrar Sesión", color = Color.White, fontSize = 18.sp)
+            }
+        }
+    }
+}
