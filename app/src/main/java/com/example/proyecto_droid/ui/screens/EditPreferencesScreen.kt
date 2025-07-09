@@ -30,20 +30,50 @@ fun EditPreferencesScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentUser = uiState.currentUser
     
-    var peso by remember { mutableStateOf(currentUser?.pesoKg?.toInt()?.toString() ?: "") }
-    var altura by remember { mutableStateOf(currentUser?.alturaCm?.toString() ?: "") }
-    var nivelActividad by remember { mutableStateOf(currentUser?.nivelActividad ?: "") }
-    var objetivo by remember { mutableStateOf(currentUser?.objetivoPrincipal ?: "") }
-    var preferenciasAlimentarias by remember { mutableStateOf(currentUser?.preferenciasAlimentarias ?: "") }
-    var alergias by remember { mutableStateOf(currentUser?.alergias ?: "") }
+    // Efecto para manejar el éxito de la actualización
+    LaunchedEffect(uiState.updateSuccess) {
+        if (uiState.updateSuccess) {
+            // Esperar 2 segundos y luego navegar de vuelta
+            kotlinx.coroutines.delay(2000)
+            onSaveClick()
+        }
+    }
+    
+    var peso by remember { mutableStateOf("") }
+    var altura by remember { mutableStateOf("") }
+    var nivelActividad by remember { mutableStateOf("") }
+    var objetivo by remember { mutableStateOf("") }
+    var preferenciasAlimentarias by remember { mutableStateOf("") }
+    var alergias by remember { mutableStateOf("") }
     
     // Valores originales para comparación
-    val originalPeso = currentUser?.pesoKg?.toInt()?.toString() ?: ""
-    val originalAltura = currentUser?.alturaCm?.toString() ?: ""
-    val originalNivelActividad = currentUser?.nivelActividad ?: ""
-    val originalObjetivo = currentUser?.objetivoPrincipal ?: ""
-    val originalPreferenciasAlimentarias = currentUser?.preferenciasAlimentarias ?: ""
-    val originalAlergias = currentUser?.alergias ?: ""
+    var originalPeso by remember { mutableStateOf("") }
+    var originalAltura by remember { mutableStateOf("") }
+    var originalNivelActividad by remember { mutableStateOf("") }
+    var originalObjetivo by remember { mutableStateOf("") }
+    var originalPreferenciasAlimentarias by remember { mutableStateOf("") }
+    var originalAlergias by remember { mutableStateOf("") }
+    
+    // Actualizar valores cuando currentUser cambie
+    LaunchedEffect(currentUser) {
+        currentUser?.let { user ->
+            // Actualizar valores actuales
+            peso = user.pesoKg?.toInt()?.toString() ?: ""
+            altura = user.alturaCm?.toString() ?: ""
+            nivelActividad = user.nivelActividad ?: ""
+            objetivo = user.objetivoPrincipal ?: ""
+            preferenciasAlimentarias = user.preferenciasAlimentarias ?: ""
+            alergias = user.alergias ?: ""
+            
+            // Actualizar valores originales para comparación
+            originalPeso = user.pesoKg?.toInt()?.toString() ?: ""
+            originalAltura = user.alturaCm?.toString() ?: ""
+            originalNivelActividad = user.nivelActividad ?: ""
+            originalObjetivo = user.objetivoPrincipal ?: ""
+            originalPreferenciasAlimentarias = user.preferenciasAlimentarias ?: ""
+            originalAlergias = user.alergias ?: ""
+        }
+    }
     
     // Función para verificar si al menos un campo ha cambiado
     val hasChanges = remember(peso, altura, nivelActividad, objetivo, preferenciasAlimentarias, alergias) {
@@ -479,20 +509,52 @@ fun EditPreferencesScreen(
                 )
             }
             
+            if (uiState.updateSuccess && uiState.successMessage != null) {
+                Text(
+                    text = uiState.successMessage!!,
+                    color = GreenPrimary,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
+            
             // Botón Guardar
             Button(
                 onClick = {
                     if (currentUser != null) {
+                        // Debug: verificar valores antes de enviar
+                        println("DEBUG: nivelActividad = '$nivelActividad'")
+                        println("DEBUG: objetivo = '$objetivo'")
+                        println("DEBUG: currentUser.nivelActividad = '${currentUser?.nivelActividad}'")
+                        println("DEBUG: currentUser.objetivoPrincipal = '${currentUser?.objetivoPrincipal}'")
+                        
+                        // Limpiar estado previo
+                        viewModel.handleEvent(ProfileEvent.ClearSuccess)
+                        
+                        // Asegurar que siempre tengamos valores válidos
+                        val finalNivelActividad = if (nivelActividad.isNotBlank()) {
+                            nivelActividad
+                        } else {
+                            currentUser.nivelActividad ?: "sedentario" // Valor por defecto
+                        }
+                        
+                        val finalObjetivo = if (objetivo.isNotBlank()) {
+                            objetivo  
+                        } else {
+                            currentUser.objetivoPrincipal ?: "mantener_peso" // Valor por defecto
+                        }
+                        
                         val updatedUser = currentUser.copy(
                             pesoKg = peso.toDoubleOrNull() ?: currentUser.pesoKg,
                             alturaCm = altura.toIntOrNull() ?: currentUser.alturaCm,
-                            nivelActividad = nivelActividad,
-                            objetivoPrincipal = objetivo,
-                            preferenciasAlimentarias = preferenciasAlimentarias,
-                            alergias = alergias
+                            nivelActividad = finalNivelActividad,
+                            objetivoPrincipal = finalObjetivo,
+                            preferenciasAlimentarias = if (preferenciasAlimentarias.isNotBlank()) preferenciasAlimentarias else currentUser.preferenciasAlimentarias,
+                            alergias = if (alergias.isNotBlank()) alergias else currentUser.alergias
                         )
+                        
+                        println("DEBUG: Usuario actualizado - nivelActividad = '${updatedUser.nivelActividad}', objetivoPrincipal = '${updatedUser.objetivoPrincipal}'")
                         viewModel.handleEvent(ProfileEvent.UpdateProfile(updatedUser))
-                        onSaveClick()
                     }
                 },
                 modifier = Modifier

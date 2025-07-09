@@ -4,6 +4,7 @@ import com.example.proyecto_droid.data.model.ApiResponse
 import com.example.proyecto_droid.data.model.LoginRequest
 import com.example.proyecto_droid.data.model.LoginResponse
 import com.example.proyecto_droid.data.model.RegisterRequest
+import com.example.proyecto_droid.data.model.RegisterResponse
 import com.example.proyecto_droid.data.model.User
 import retrofit2.http.*
 
@@ -13,7 +14,7 @@ interface ApiService {
     suspend fun login(@Body loginRequest: LoginRequest): ApiResponse<LoginResponse>
     
     @POST("usuarios/registro")
-    suspend fun register(@Body registerRequest: RegisterRequest): ApiResponse<User>
+    suspend fun register(@Body registerRequest: RegisterRequest): ApiResponse<RegisterResponse>
     
     @GET("usuarios/{id}")
     suspend fun getUser(@Path("id") userId: Int, @Header("Authorization") token: String): ApiResponse<User>

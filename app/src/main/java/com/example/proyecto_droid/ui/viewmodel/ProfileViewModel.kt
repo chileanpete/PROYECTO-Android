@@ -8,6 +8,7 @@ import com.example.proyecto_droid.data.repository.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 data class ProfileUiState(
@@ -17,7 +18,9 @@ data class ProfileUiState(
     val isLoggedIn: Boolean = false,
     val shouldNavigateToEditProfile: Boolean = false,
     val shouldNavigateToEditPreferences: Boolean = false,
-    val shouldNavigateToChangePassword: Boolean = false
+    val shouldNavigateToChangePassword: Boolean = false,
+    val updateSuccess: Boolean = false,
+    val successMessage: String? = null
 )
 
 sealed class ProfileEvent {
@@ -29,6 +32,7 @@ sealed class ProfileEvent {
     object NavigateToEditPreferences : ProfileEvent()
     object NavigateToChangePassword : ProfileEvent()
     data class ChangePassword(val currentPassword: String, val newPassword: String) : ProfileEvent()
+    object ClearSuccess : ProfileEvent()
 }
 
 class ProfileViewModel(application: Application) : AndroidViewModel(application) {
@@ -68,6 +72,13 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             is ProfileEvent.ChangePassword -> {
                 changePassword(event.currentPassword, event.newPassword)
             }
+            is ProfileEvent.ClearSuccess -> {
+                _uiState.value = _uiState.value.copy(
+                    updateSuccess = false,
+                    successMessage = null,
+                    error = null
+                )
+            }
         }
     }
     
@@ -76,35 +87,35 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
             _uiState.value = _uiState.value.copy(isLoading = true, error = null)
             
             try {
-                // Verificar si hay una sesión activa
-                userRepository.isUserLoggedIn().collect { isLoggedIn ->
-                    if (isLoggedIn) {
-                        // Obtener el perfil del usuario desde la API
-                        val result = userRepository.getCurrentUserProfile()
-                        
-                        if (result.isSuccess) {
-                            _uiState.value = _uiState.value.copy(
-                                currentUser = result.getOrNull(),
-                                isLoading = false,
-                                error = null,
-                                isLoggedIn = true
-                            )
-                        } else {
-                            _uiState.value = _uiState.value.copy(
-                                currentUser = null,
-                                isLoading = false,
-                                error = result.exceptionOrNull()?.message ?: "Error al cargar perfil",
-                                isLoggedIn = true
-                            )
-                        }
+                // Verificar si hay una sesión activa (usando first() en lugar de collect)
+                val isLoggedIn = userRepository.isUserLoggedIn().first()
+                
+                if (isLoggedIn) {
+                    // Obtener el perfil del usuario desde la API
+                    val result = userRepository.getCurrentUserProfile()
+                    
+                    if (result.isSuccess) {
+                        _uiState.value = _uiState.value.copy(
+                            currentUser = result.getOrNull(),
+                            isLoading = false,
+                            error = null,
+                            isLoggedIn = true
+                        )
                     } else {
                         _uiState.value = _uiState.value.copy(
                             currentUser = null,
                             isLoading = false,
-                            error = "Usuario no autenticado",
-                            isLoggedIn = false
+                            error = result.exceptionOrNull()?.message ?: "Error al cargar perfil",
+                            isLoggedIn = true
                         )
                     }
+                } else {
+                    _uiState.value = _uiState.value.copy(
+                        currentUser = null,
+                        isLoading = false,
+                        error = null, // No mostrar error cuando no hay sesión
+                        isLoggedIn = false
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
@@ -147,7 +158,12 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     
     private fun updateProfile(user: User) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true, 
+                error = null, 
+                updateSuccess = false, 
+                successMessage = null
+            )
             
             try {
                 val result = userRepository.updateUser(user)
@@ -156,18 +172,22 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
                     _uiState.value = _uiState.value.copy(
                         currentUser = result.getOrNull(),
                         isLoading = false,
-                        error = null
+                        error = null,
+                        updateSuccess = true,
+                        successMessage = "Perfil actualizado exitosamente"
                     )
                 } else {
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        error = result.exceptionOrNull()?.message ?: "Error al actualizar perfil"
+                        error = result.exceptionOrNull()?.message ?: "Error al actualizar perfil",
+                        updateSuccess = false
                     )
                 }
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     isLoading = false,
-                    error = "Error inesperado: ${e.message}"
+                    error = "Error inesperado: ${e.message}",
+                    updateSuccess = false
                 )
             }
         }
@@ -175,8 +195,15 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
     
     private fun logout() {
         viewModelScope.launch {
-            userRepository.logoutUser()
-            _uiState.value = ProfileUiState(isLoading = false)
+            try {
+                userRepository.logoutUser()
+                _uiState.value = ProfileUiState(isLoading = false, isLoggedIn = false)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    error = "Error al cerrar sesión: ${e.message}",
+                    isLoading = false
+                )
+            }
         }
     }
     
@@ -184,7 +211,10 @@ class ProfileViewModel(application: Application) : AndroidViewModel(application)
         _uiState.value = _uiState.value.copy(
             shouldNavigateToEditProfile = false,
             shouldNavigateToEditPreferences = false,
-            shouldNavigateToChangePassword = false
+            shouldNavigateToChangePassword = false,
+            updateSuccess = false,
+            successMessage = null,
+            error = null
         )
     }
     

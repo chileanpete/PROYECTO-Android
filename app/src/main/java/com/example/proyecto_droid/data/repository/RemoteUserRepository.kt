@@ -5,6 +5,7 @@ import com.example.proyecto_droid.data.model.ApiResponse
 import com.example.proyecto_droid.data.model.LoginRequest
 import com.example.proyecto_droid.data.model.LoginResponse
 import com.example.proyecto_droid.data.model.RegisterRequest
+import com.example.proyecto_droid.data.model.RegisterResponse
 import com.example.proyecto_droid.data.model.User
 import com.example.proyecto_droid.data.remote.RetrofitClient
 import kotlinx.coroutines.Dispatchers
@@ -41,12 +42,12 @@ class RemoteUserRepository(private val context: Context) {
         }
     }
     
-    suspend fun registerUser(user: User): Result<User> {
+    suspend fun registerUser(user: User): Result<Pair<User, String>> {
         return withContext(Dispatchers.IO) {
             try {
                 val registerRequest = RegisterRequest(
                     email = user.email,
-                    password = user.passwordHash, // Usar passwordHash como password sin hashear
+                    password = user.passwordHash, // Ahora contiene la contraseña en texto plano
                     nombre = user.nombre,
                     apellidos = user.apellidos,
                     fechaNacimiento = user.fechaNacimiento,
@@ -60,7 +61,7 @@ class RemoteUserRepository(private val context: Context) {
                 val response = apiService.register(registerRequest)
                 
                 if (response.success && response.data != null) {
-                    Result.success(response.data)
+                    Result.success(Pair(response.data.usuario, response.data.token))
                 } else {
                     val errorMessage = response.message ?: "Error en el registro"
                     Result.failure(Exception(errorMessage))

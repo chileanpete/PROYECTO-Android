@@ -44,8 +44,9 @@ object ApiTestHelper {
                 
                 if (response.success) {
                     Log.d(TAG, "✅ Registro exitoso!")
-                    Log.d(TAG, "Usuario creado: ${response.data?.nombre} ${response.data?.apellidos}")
-                    Log.d(TAG, "ID: ${response.data?.id}")
+                    Log.d(TAG, "Usuario creado: ${response.data?.usuario?.nombre} ${response.data?.usuario?.apellidos}")
+                    Log.d(TAG, "ID: ${response.data?.usuario?.id}")
+                    Log.d(TAG, "Token: ${response.data?.token}")
                 } else {
                     Log.e(TAG, "❌ Error en registro: ${response.message}")
                 }

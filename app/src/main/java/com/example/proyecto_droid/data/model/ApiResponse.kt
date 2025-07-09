@@ -24,6 +24,14 @@ data class LoginResponse(
     val token: String
 )
 
+data class RegisterResponse(
+    @SerializedName("usuario")
+    val usuario: User,
+    
+    @SerializedName("token")
+    val token: String
+)
+
 data class LoginRequest(
     @SerializedName("email")
     val email: String,

@@ -13,6 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -186,7 +189,7 @@ fun RegisterScreen(
                         )
                     } else {
                         Text(
-                            text = if (uiState.currentStep == 3) "Completar Registro" else "Siguiente",
+                            text = if (uiState.currentStep == 3) "Registrarse" else "Siguiente",
                             color = Color.White,
                             fontSize = 16.sp
                         )
@@ -215,7 +218,7 @@ private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.pro
     OutlinedTextField(
         value = uiState.email,
         onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateEmail(it)) },
-        label = { Text("Correo electrónico *") },
+        label = { Text("Correo electrónico") },
         singleLine = true,
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -230,7 +233,7 @@ private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.pro
     OutlinedTextField(
         value = uiState.nombre,
         onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateNombre(it)) },
-        label = { Text("Nombre *") },
+        label = { Text("Nombre") },
         singleLine = true,
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -245,7 +248,7 @@ private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.pro
     OutlinedTextField(
         value = uiState.apellidos,
         onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateApellidos(it)) },
-        label = { Text("Apellidos *") },
+        label = { Text("Apellidos") },
         singleLine = true,
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -257,12 +260,21 @@ private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.pro
     Spacer(modifier = Modifier.height(12.dp))
     
     // Contraseña
+    var passwordVisible by remember { mutableStateOf(false) }
     OutlinedTextField(
         value = uiState.password,
         onValueChange = { viewModel.handleEvent(RegisterEvent.UpdatePassword(it)) },
-        label = { Text("Contraseña *") },
+        label = { Text("Contraseña") },
         singleLine = true,
-        visualTransformation = PasswordVisualTransformation(),
+        visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = {
+            val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+            val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+            
+            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                Icon(imageVector = image, contentDescription = description)
+            }
+        },
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth(),
         colors = OutlinedTextFieldDefaults.colors(
@@ -273,12 +285,21 @@ private fun RegisterStep1(viewModel: RegisterViewModel, uiState: com.example.pro
     Spacer(modifier = Modifier.height(12.dp))
     
     // Confirmar contraseña
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
     OutlinedTextField(
         value = uiState.confirmPassword,
         onValueChange = { viewModel.handleEvent(RegisterEvent.UpdateConfirmPassword(it)) },
-        label = { Text("Confirmar contraseña *") },
+        label = { Text("Confirmar contraseña") },
         singleLine = true,
-        visualTransformation = PasswordVisualTransformation(),
+        visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+        trailingIcon = {
+            val image = if (confirmPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+            val description = if (confirmPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+            
+            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                Icon(imageVector = image, contentDescription = description)
+            }
+        },
         shape = RoundedCornerShape(24.dp),
         modifier = Modifier.fillMaxWidth(),
         colors = OutlinedTextFieldDefaults.colors(
@@ -329,7 +350,7 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
         value = uiState.fechaNacimiento,
         onValueChange = { },
         readOnly = true,
-        label = { Text("Fecha de nacimiento *") },
+        label = { Text("Fecha de nacimiento") },
         trailingIcon = { 
             Icon(
                 imageVector = Icons.Default.CalendarToday,
@@ -364,7 +385,7 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
             value = formatOptionText(uiState.genero),
             onValueChange = { },
             readOnly = true,
-            label = { Text("Género *") },
+            label = { Text("Género") },
             trailingIcon = { 
                 Icon(
                     imageVector = if (generoExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -394,7 +415,7 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
                             text = formatOptionText(option),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (option == uiState.genero) GreenPrimary else Color.Black
+                            color = if (option == uiState.genero) Color.White else Color.Black
                         )
                     },
                     onClick = { 
@@ -403,9 +424,13 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 4.dp)
+                        .background(
+                            if (option == uiState.genero) GreenPrimary else Color.Transparent,
+                            RoundedCornerShape(8.dp)
+                        ),
                     colors = MenuDefaults.itemColors(
-                        textColor = if (option == uiState.genero) GreenPrimary else Color.Black
+                        textColor = if (option == uiState.genero) Color.White else Color.Black
                     )
                 )
             }
@@ -431,7 +456,7 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
             value = uiState.alturaCm,
             onValueChange = { },
             readOnly = true,
-            label = { Text("Altura *") },
+            label = { Text("Altura") },
             trailingIcon = { 
                 Icon(
                     imageVector = if (alturaExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -462,7 +487,7 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
                             text = altura,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (altura == uiState.alturaCm) GreenPrimary else Color.Black
+                            color = if (altura == uiState.alturaCm) Color.White else Color.Black
                         )
                     },
                     onClick = { 
@@ -471,9 +496,13 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 2.dp),
+                        .padding(vertical = 2.dp)
+                        .background(
+                            if (altura == uiState.alturaCm) GreenPrimary else Color.Transparent,
+                            RoundedCornerShape(8.dp)
+                        ),
                     colors = MenuDefaults.itemColors(
-                        textColor = if (altura == uiState.alturaCm) GreenPrimary else Color.Black
+                        textColor = if (altura == uiState.alturaCm) Color.White else Color.Black
                     )
                 )
             }
@@ -499,7 +528,7 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
             value = uiState.pesoKg,
             onValueChange = { },
             readOnly = true,
-            label = { Text("Peso *") },
+            label = { Text("Peso") },
             trailingIcon = { 
                 Icon(
                     imageVector = if (pesoExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -530,7 +559,7 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
                             text = peso,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (peso == uiState.pesoKg) GreenPrimary else Color.Black
+                            color = if (peso == uiState.pesoKg) Color.White else Color.Black
                         )
                     },
                     onClick = { 
@@ -539,9 +568,13 @@ private fun RegisterStep2(viewModel: RegisterViewModel, uiState: com.example.pro
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 2.dp),
+                        .padding(vertical = 2.dp)
+                        .background(
+                            if (peso == uiState.pesoKg) GreenPrimary else Color.Transparent,
+                            RoundedCornerShape(8.dp)
+                        ),
                     colors = MenuDefaults.itemColors(
-                        textColor = if (peso == uiState.pesoKg) GreenPrimary else Color.Black
+                        textColor = if (peso == uiState.pesoKg) Color.White else Color.Black
                     )
                 )
             }
@@ -579,7 +612,7 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
             value = formatOptionText(uiState.nivelActividad),
             onValueChange = { },
             readOnly = true,
-            label = { Text("Nivel de actividad física *") },
+            label = { Text("Nivel de actividad física") },
             trailingIcon = { 
                 Icon(
                     imageVector = if (nivelActividadExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -609,7 +642,7 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
                             text = formatOptionText(option),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (option == uiState.nivelActividad) GreenPrimary else Color.Black
+                            color = if (option == uiState.nivelActividad) Color.White else Color.Black
                         )
                     },
                     onClick = { 
@@ -618,9 +651,13 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 4.dp)
+                        .background(
+                            if (option == uiState.nivelActividad) GreenPrimary else Color.Transparent,
+                            RoundedCornerShape(8.dp)
+                        ),
                     colors = MenuDefaults.itemColors(
-                        textColor = if (option == uiState.nivelActividad) GreenPrimary else Color.Black
+                        textColor = if (option == uiState.nivelActividad) Color.White else Color.Black
                     )
                 )
             }
@@ -646,7 +683,7 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
             value = formatOptionText(uiState.objetivoPrincipal),
             onValueChange = { },
             readOnly = true,
-            label = { Text("Objetivo principal *") },
+            label = { Text("Objetivo principal") },
             trailingIcon = { 
                 Icon(
                     imageVector = if (objetivoExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
@@ -676,7 +713,7 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
                             text = formatOptionText(option),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (option == uiState.objetivoPrincipal) GreenPrimary else Color.Black
+                            color = if (option == uiState.objetivoPrincipal) Color.White else Color.Black
                         )
                     },
                     onClick = { 
@@ -685,9 +722,13 @@ private fun RegisterStep3(viewModel: RegisterViewModel, uiState: com.example.pro
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp),
+                        .padding(vertical = 4.dp)
+                        .background(
+                            if (option == uiState.objetivoPrincipal) GreenPrimary else Color.Transparent,
+                            RoundedCornerShape(8.dp)
+                        ),
                     colors = MenuDefaults.itemColors(
-                        textColor = if (option == uiState.objetivoPrincipal) GreenPrimary else Color.Black
+                        textColor = if (option == uiState.objetivoPrincipal) Color.White else Color.Black
                     )
                 )
             }

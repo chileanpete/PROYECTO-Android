@@ -19,7 +19,10 @@ class UserRepository(context: Context) {
             val apiResult = remoteUserRepository.registerUser(user)
             
             if (apiResult.isSuccess) {
-                val registeredUser = apiResult.getOrNull()!!
+                val (registeredUser, token) = apiResult.getOrNull()!!
+                
+                // Guardar datos de autenticación
+                authManager.saveAuthData(token, registeredUser.id ?: 0, registeredUser.email)
                 
                 // Guardar sesión local
                 sessionManager.saveUserSession(registeredUser.email, "${registeredUser.nombre} ${registeredUser.apellidos}")

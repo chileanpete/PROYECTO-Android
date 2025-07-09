@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.security.MessageDigest
+import java.text.SimpleDateFormat
+import java.util.*
 
 data class RegisterUiState(
     val currentStep: Int = 1,
@@ -30,8 +31,8 @@ data class RegisterUiState(
     val nivelesActividad: List<String> = emptyList(),
     val objetivos: List<String> = emptyList(),
     val generos: List<String> = emptyList(),
-    val alturas: List<String> = (100..250).map { "${it} cm" },
-    val pesos: List<String> = (30..200).map { "${it} kg" }
+    val alturas: List<String> = (140..250).map { "$it cm" },
+    val pesos: List<String> = (30..200).map { "$it kg" }
 )
 
 sealed class RegisterEvent {
@@ -46,10 +47,10 @@ sealed class RegisterEvent {
     data class UpdatePeso(val peso: String) : RegisterEvent()
     data class UpdateNivelActividad(val nivel: String) : RegisterEvent()
     data class UpdateObjetivoPrincipal(val objetivo: String) : RegisterEvent()
-    object NextStep : RegisterEvent()
-    object PreviousStep : RegisterEvent()
-    object RegisterUser : RegisterEvent()
-    object ClearError : RegisterEvent()
+    data object NextStep : RegisterEvent()
+    data object PreviousStep : RegisterEvent()
+    data object RegisterUser : RegisterEvent()
+    data object ClearError : RegisterEvent()
 }
 
 class RegisterViewModel(application: Application) : AndroidViewModel(application) {
@@ -162,6 +163,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         val state = _uiState.value
         return when {
             state.fechaNacimiento.isBlank() -> "La fecha de nacimiento es obligatoria"
+            !isValidAge(state.fechaNacimiento) -> "Debes ser mayor de 17 años para registrarte"
             state.genero.isBlank() -> "El género es obligatorio"
             state.alturaCm.isBlank() -> "La altura es obligatoria"
             state.pesoKg.isBlank() -> "El peso es obligatorio"
@@ -182,10 +184,20 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
         return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
-    private fun hashPassword(password: String): String {
-        val bytes = MessageDigest.getInstance("SHA-256").digest(password.toByteArray())
-        return bytes.joinToString("") { "%02x".format(it) }
+    private fun isValidAge(fechaNacimiento: String): Boolean {
+        return try {
+            val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val fechaNac = formatter.parse(fechaNacimiento)
+            val now = Date()
+            val diffInMillis = now.time - (fechaNac?.time ?: 0)
+            val ageInYears = diffInMillis / (365.25 * 24 * 60 * 60 * 1000)
+            ageInYears >= 17
+        } catch (e: Exception) {
+            false
+        }
     }
+
+
 
     private fun registerUser() {
         val state = _uiState.value
@@ -200,7 +212,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
             try {
                 val user = User(
                     email = state.email,
-                    passwordHash = hashPassword(state.password),
+                    passwordHash = state.password, // Enviar contraseña en texto plano
                     nombre = state.nombre,
                     apellidos = state.apellidos,
                     fechaNacimiento = state.fechaNacimiento,
@@ -215,7 +227,7 @@ class RegisterViewModel(application: Application) : AndroidViewModel(application
 
                 val result = userRepository.registerUser(user)
                 result.fold(
-                    onSuccess = { registeredUser ->
+                    onSuccess = {
                         _uiState.value = state.copy(
                             isLoading = false,
                             isRegistrationSuccessful = true,
