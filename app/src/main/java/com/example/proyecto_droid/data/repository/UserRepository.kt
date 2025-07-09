@@ -145,4 +145,25 @@ class UserRepository(context: Context) {
     fun getGeneros(): List<String> {
         return listOf("M", "F", "O")
     }
+    
+    suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit> {
+        return try {
+            val token = authManager.authToken.first()
+            val userId = authManager.userId.first()
+            
+            if (token != null && userId != null) {
+                val apiResult = remoteUserRepository.changePassword(userId, currentPassword, newPassword, token)
+                
+                if (apiResult.isSuccess) {
+                    Result.success(Unit)
+                } else {
+                    Result.failure(Exception(apiResult.exceptionOrNull()?.message ?: "Error al cambiar contraseña"))
+                }
+            } else {
+                Result.failure(Exception("Usuario no autenticado"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 } 
