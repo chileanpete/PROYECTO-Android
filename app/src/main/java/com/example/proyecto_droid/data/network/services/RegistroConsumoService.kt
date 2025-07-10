@@ -78,8 +78,8 @@ interface RegistroConsumoService {
     @GET("api/platos")
     suspend fun getPlatos(): Response<ApiResponse<PaginatedPlatoResponse>>
 
-    @GET("api/registro-consumo/exportar-pdf")
-    suspend fun exportarPDF(): Response<ApiResponse<ExportarPDFResponse>>
+    @GET("api/exportacion/consumo-pdf")
+    suspend fun exportarPDF(@Query("id_usuario") idUsuario: Int): Response<ApiResponse<ExportarPDFResponse>>
 
     @GET("api/actividad-fisica/exportar-pdf")
     suspend fun exportarPDFActividad(): Response<ApiResponse<ExportarPDFResponse>>

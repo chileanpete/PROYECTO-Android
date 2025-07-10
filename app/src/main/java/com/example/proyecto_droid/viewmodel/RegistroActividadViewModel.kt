@@ -53,24 +53,44 @@ class RegistroActividadViewModel(private val context: Context) : ViewModel() {
         }
     }
 
-    fun exportarPDF(context: Context, idUsuario: Int = 1) {
+    fun exportarPDF(context: Context) {
         isExporting.value = true
         exportError.value = null
         pdfFile.value = null
+        val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val idUsuario = sharedPreferences.getInt("user_id", 1)
         Log.d("RegistroActividadVM", "[exportarPDF] Iniciando exportación de PDF para usuario $idUsuario")
         
         viewModelScope.launch {
-            activityRepository.exportarPDFActividad().fold(
-                onSuccess = { exportResponse ->
-                    Log.d("RegistroActividadVM", "[exportarPDF] PDF exportado exitosamente: ${exportResponse.filename}")
-                    // Aquí puedes usar exportResponse.downloadUrl para descargar el archivo
-                    // o usar exportResponse.filename para mostrar información al usuario
-                    Toast.makeText(context, "PDF exportado: ${exportResponse.filename}", Toast.LENGTH_LONG).show()
-                },
-                onFailure = { exception ->
-                    Log.e("RegistroActividadVM", "[exportarPDF] Error durante exportación: ${exception.message}")
-                    exportError.value = exception.message ?: "Error al exportar PDF"
-                    Toast.makeText(context, exception.message ?: "Error al exportar PDF", Toast.LENGTH_LONG).show()
+            try {
+                Log.d("RegistroActividadVM", "[exportarPDF] Llamando a RetrofitClient.apiService.exportarPDFActividad()")
+                val response = RetrofitClient.apiService.exportarPDFActividad(idUsuario)
+                Log.d("RegistroActividadVM", "[exportarPDF] Respuesta recibida: ${response.code()} ${response.message()}")
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val pdfData = response.body()?.data
+                    Log.d("RegistroActividadVM", "[exportarPDF] pdfData: $pdfData")
+                    if (pdfData != null) {
+                        Log.d("RegistroActividadVM", "[exportarPDF] Guardando PDF en dispositivo...")
+                        val file = com.example.proyecto_droid.util.FileUtils.savePdfToDevice(context, pdfData.content, pdfData.filename)
+                        if (file != null) {
+                            pdfFile.value = file
+                            Log.d("RegistroActividadVM", "[exportarPDF] PDF guardado exitosamente: ${file.absolutePath}")
+                            Toast.makeText(context, "PDF descargado en Descargas", Toast.LENGTH_LONG).show()
+                        } else {
+                            Log.e("RegistroActividadVM", "[exportarPDF] Error al guardar PDF en dispositivo")
+                            exportError.value = "Error al guardar el PDF en el dispositivo"
+                            Toast.makeText(context, "Error al guardar el PDF", Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        Log.e("RegistroActividadVM", "[exportarPDF] No se recibieron datos del PDF")
+                        exportError.value = "No se recibieron datos del PDF"
+                        Toast.makeText(context, "No se recibieron datos del PDF", Toast.LENGTH_LONG).show()
+                    }
+                } else {
+                    val errorMsg = response.body()?.message ?: "Error al generar PDF"
+                    Log.e("RegistroActividadVM", "[exportarPDF] Error en respuesta: $errorMsg")
+                    exportError.value = errorMsg
+                    Toast.makeText(context, errorMsg, Toast.LENGTH_LONG).show()
                 }
             )
             

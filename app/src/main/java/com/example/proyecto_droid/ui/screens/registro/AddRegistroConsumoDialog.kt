@@ -18,6 +18,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.proyecto_droid.data.model.Plato
 import com.example.proyecto_droid.ui.theme.GreenPrimary
+import androidx.compose.ui.res.stringResource
+import com.example.proyecto_droid.R
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -27,6 +30,7 @@ fun AddRegistroConsumoDialog(
     onConfirm: (Plato, Double, Int?, String?) -> Unit,
     onRetryLoadPlatos: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     var selectedPlato by remember { mutableStateOf<Plato?>(null) }
     var expanded by remember { mutableStateOf(false) }
     var porciones by remember { mutableStateOf("1.0") }
@@ -130,7 +134,7 @@ fun AddRegistroConsumoDialog(
                 OutlinedTextField(
                     value = porciones,
                     onValueChange = { porciones = it },
-                    label = { Text("Porciones") },
+                    label = { Text(stringResource(R.string.dialog_label_porciones)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -145,7 +149,7 @@ fun AddRegistroConsumoDialog(
                 OutlinedTextField(
                     value = valoracion,
                     onValueChange = { valoracion = it },
-                    label = { Text("Valoración (1-5)") },
+                    label = { Text(stringResource(R.string.dialog_label_valoracion)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -160,7 +164,7 @@ fun AddRegistroConsumoDialog(
                 OutlinedTextField(
                     value = comentario,
                     onValueChange = { comentario = it },
-                    label = { Text("Comentario (opcional)") },
+                    label = { Text(stringResource(R.string.dialog_label_comentario)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = GreenPrimary,
@@ -184,9 +188,9 @@ fun AddRegistroConsumoDialog(
                     val porcionesVal = porciones.toDoubleOrNull()
                     val valoracionVal = valoracion.toIntOrNull()
                     when {
-                        selectedPlato == null -> errorMsg = "Debes seleccionar un plato"
-                        porcionesVal == null || porcionesVal < 0.1 || porcionesVal > 10 -> errorMsg = "Porciones debe ser un número entre 0.1 y 10"
-                        valoracion.isNotBlank() && (valoracionVal == null || valoracionVal < 1 || valoracionVal > 5) -> errorMsg = "Valoración debe ser un número entre 1 y 5"
+                        selectedPlato == null -> errorMsg = context.getString(R.string.dialog_error_sin_plato)
+                        porcionesVal == null || porcionesVal < 0.1 || porcionesVal > 10 -> errorMsg = context.getString(R.string.dialog_error_porciones)
+                        valoracion.isNotBlank() && (valoracionVal == null || valoracionVal < 1 || valoracionVal > 5) -> errorMsg = context.getString(R.string.dialog_error_valoracion)
                         else -> {
                             errorMsg = null
                             onConfirm(
@@ -204,7 +208,7 @@ fun AddRegistroConsumoDialog(
                 ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Guardar", color = Color.White)
+                Text(stringResource(R.string.dialog_boton_guardar), color = Color.White)
             }
         },
         dismissButton = {
@@ -214,7 +218,7 @@ fun AddRegistroConsumoDialog(
                     contentColor = GreenPrimary
                 )
             ) {
-                Text("Cancelar")
+                Text(stringResource(R.string.dialog_boton_cancelar))
             }
         }
     )

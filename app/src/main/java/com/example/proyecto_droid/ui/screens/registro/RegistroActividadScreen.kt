@@ -35,6 +35,12 @@ import com.example.proyecto_droid.data.local.SessionManager
 import android.util.Log
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import android.widget.Toast
+import android.content.Intent
+import android.net.Uri
+import androidx.core.content.FileProvider
+import androidx.compose.ui.res.stringResource
+import com.example.proyecto_droid.R
 
 fun formatearFecha(fechaIso: String?): String {
     if (fechaIso == null) return "-"
@@ -87,29 +93,7 @@ fun RegistroActividadScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     val activity = LocalContext.current as? Activity
 
-    // Launcher para permisos de almacenamiento
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            viewModel.exportarPDF(context)
-        }
-    }
-
-    // Función para solicitar permisos y exportar
-    fun requestPermissionAndExport() {
-        when {
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ) == PackageManager.PERMISSION_GRANTED -> {
-                viewModel.exportarPDF(context)
-            }
-            else -> {
-                permissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            }
-        }
-    }
+    // Eliminar permissionLauncher y requestPermissionAndExport
 
     // TODO: Cargar tipos de ejercicio reales si tienes endpoint, aquí simulado
     val tiposEjercicio = remember { 
@@ -151,13 +135,13 @@ fun RegistroActividadScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Registros de Actividad",
+                text = stringResource(R.string.titulo_registros_actividad),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
             
             IconButton(
-                onClick = { requestPermissionAndExport() },
+                onClick = { viewModel.exportarPDF(context) },
                 enabled = !isExporting
             ) {
                 if (isExporting) {
@@ -168,7 +152,7 @@ fun RegistroActividadScreen(
                 } else {
                     Icon(
                         Icons.Default.Download,
-                        contentDescription = "Exportar PDF",
+                        contentDescription = stringResource(R.string.exportar_pdf),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
@@ -189,11 +173,47 @@ fun RegistroActividadScreen(
         ) {
             Icon(Icons.Default.Add, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Agregar Registro de Actividad", color = Color.White)
+            Text(stringResource(R.string.agregar_registro_actividad), color = Color.White)
         }
         
         Spacer(modifier = Modifier.height(16.dp))
         
+        // Botones para compartir y abrir PDF si existe
+        if (pdfFile != null) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Button(
+                    onClick = { com.example.proyecto_droid.util.FileUtils.sharePdf(context, pdfFile!!) },
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.compartir_pdf), color = Color.White)
+                }
+                Button(
+                    onClick = {
+                        val uri: Uri = FileProvider.getUriForFile(
+                            context,
+                            context.packageName + ".provider",
+                            pdfFile!!
+                        )
+                        val intent = Intent(Intent.ACTION_VIEW).apply {
+                            setDataAndType(uri, "application/pdf")
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Abrir PDF"))
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+                ) {
+                    Icon(Icons.Default.Visibility, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(stringResource(R.string.abrir_pdf), color = Color.White)
+                }
+            }
+        }
+
         // Mostrar error de guardado si existe
         if (saveError != null) {
             AlertDialog(

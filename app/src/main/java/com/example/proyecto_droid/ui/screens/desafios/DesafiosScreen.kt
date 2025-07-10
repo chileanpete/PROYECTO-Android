@@ -14,8 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.proyecto_droid.R
 import com.example.proyecto_droid.data.local.DesafioPreferences
 import com.example.proyecto_droid.data.model.TipoDesafio
 import com.example.proyecto_droid.ui.screens.desafios.components.DesafioCard
@@ -25,7 +27,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun DesafiosScreenTab(
     viewModel: DesafiosViewModel = viewModel(),
-    idUsuario: Int = 1 // TODO: Reemplaza esto por el id_usuario real del usuario logueado
+    idUsuario: Int = 1
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -34,29 +36,26 @@ fun DesafiosScreenTab(
         viewModel.cargarDesafios()
     }
 
-    // Objetivos disponibles
     val objetivosDisponibles = listOf(
-        "Mejorar salud cardiovascular",
-        "Perder peso",
-        "Aumentar fuerza muscular",
-        "Mejorar flexibilidad",
-        "Reducir estrés",
-        "Consistencia"
+        stringResource(R.string.objetivo_salud_cardiovascular),
+        stringResource(R.string.objetivo_perder_peso),
+        stringResource(R.string.objetivo_fuerza_muscular),
+        stringResource(R.string.objetivo_flexibilidad),
+        stringResource(R.string.objetivo_reducir_estres),
+        stringResource(R.string.objetivo_consistencia)
     )
 
-    // Estado de objetivos semanales y diarios
     var objetivosSemana by remember { mutableStateOf<List<String>?>(null) }
     var fechaSemana by remember { mutableStateOf<String?>(null) }
     var objetivosDia by remember { mutableStateOf<List<String>?>(null) }
     var fechaDia by remember { mutableStateOf<String?>(null) }
 
-    // Estado para mostrar los diálogos
     var mostrarDialogoSemana by remember { mutableStateOf(false) }
     var mostrarDialogoDia by remember { mutableStateOf(false) }
+
     val semanaActual = DesafioPreferences.getCurrentWeekStart()
     val diaActual = DesafioPreferences.getCurrentDay()
 
-    // Cargar objetivos guardados
     LaunchedEffect(idUsuario) {
         DesafioPreferences.getWeeklyObjectives(context, idUsuario).collect { (objs, fecha) ->
             objetivosSemana = objs
@@ -72,7 +71,6 @@ fun DesafiosScreenTab(
         }
     }
 
-    // Guardar objetivos semanales
     fun guardarObjetivosSemana(seleccionados: List<String>) {
         scope.launch {
             DesafioPreferences.saveWeeklyObjectives(context, idUsuario, seleccionados, semanaActual)
@@ -81,7 +79,7 @@ fun DesafiosScreenTab(
             mostrarDialogoSemana = false
         }
     }
-    // Guardar objetivos diarios
+
     fun guardarObjetivosDia(seleccionados: List<String>) {
         scope.launch {
             DesafioPreferences.saveDailyObjectives(context, idUsuario, seleccionados, diaActual)
@@ -91,26 +89,23 @@ fun DesafiosScreenTab(
         }
     }
 
-    // Estado de desafíos
     val desafios by viewModel.desafios.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMsg by viewModel.error.collectAsState()
 
-    // Filtrado de desafíos (insensible a mayúsculas/minúsculas y espacios)
     fun normalizar(str: String) = str.trim().lowercase()
     val objetivosSemanaNorm = objetivosSemana?.map { normalizar(it) } ?: emptyList()
     val objetivosDiaNorm = objetivosDia?.map { normalizar(it) } ?: emptyList()
 
     val desafiosSemanales = desafios.filter {
         it.tipo == TipoDesafio.SEMANAL &&
-        it.objetivosRelacionados.map { normalizar(it) }.any { obj -> obj in objetivosSemanaNorm }
+                it.objetivosRelacionados.map { normalizar(it) }.any { obj -> obj in objetivosSemanaNorm }
     }
     val desafiosDiarios = desafios.filter {
         it.tipo == TipoDesafio.DIARIO &&
-        it.objetivosRelacionados.map { normalizar(it) }.any { obj -> obj in objetivosDiaNorm }
+                it.objetivosRelacionados.map { normalizar(it) }.any { obj -> obj in objetivosDiaNorm }
     }
 
-    // Diálogo de objetivos semanales
     if (mostrarDialogoSemana) {
         val seleccionados = remember { mutableStateListOf<String>() }
         AlertDialog(
@@ -122,13 +117,13 @@ fun DesafiosScreenTab(
             title = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "¿Cuáles son tus objetivos para la semana?",
+                        text = stringResource(R.string.titulo_objetivos_semanales),
                         style = MaterialTheme.typography.titleLarge,
                         color = Color(0xFF4CAF50)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Selecciona uno o más para sugerirte desafíos semanales",
+                        text = stringResource(R.string.subtitulo_objetivos_semanales),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -176,13 +171,12 @@ fun DesafiosScreenTab(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
-                    Text("Aceptar", color = Color.White)
+                    Text(stringResource(R.string.boton_aceptar), color = Color.White)
                 }
             }
         )
     }
 
-    // Diálogo de objetivos diarios
     if (mostrarDialogoDia && !mostrarDialogoSemana) {
         val seleccionados = remember { mutableStateListOf<String>() }
         AlertDialog(
@@ -194,13 +188,13 @@ fun DesafiosScreenTab(
             title = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = "¿Cuáles son tus objetivos para hoy?",
+                        text = stringResource(R.string.titulo_objetivos_diarios),
                         style = MaterialTheme.typography.titleLarge,
                         color = Color(0xFF4CAF50)
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Selecciona uno o más para sugerirte desafíos diarios",
+                        text = stringResource(R.string.subtitulo_objetivos_diarios),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -248,7 +242,7 @@ fun DesafiosScreenTab(
                         .fillMaxWidth()
                         .padding(horizontal = 24.dp, vertical = 8.dp)
                 ) {
-                    Text("Aceptar", color = Color.White)
+                    Text(stringResource(R.string.boton_aceptar), color = Color.White)
                 }
             }
         )
@@ -260,6 +254,14 @@ fun DesafiosScreenTab(
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
+        Text(
+            text = stringResource(R.string.titulo_desafios_sugeridos),
+            style = MaterialTheme.typography.headlineMedium.copy(color = Color(0xFF4CAF50)),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
+
         if (isLoading) {
             Box(
                 modifier = Modifier
@@ -296,20 +298,13 @@ fun DesafiosScreenTab(
                 }
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Mostrar encabezado y lista de desafíos semanales
+            LazyColumn(modifier = Modifier.weight(1f)) {
                 if (desafiosSemanales.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Desafíos Semanales",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = Color(0xFF4CAF50),
-                                fontWeight = FontWeight.Bold
-                            ),
-                            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
+                            text = stringResource(R.string.titulo_desafios_semanales),
+                            style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF4CAF50)),
+                            modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
                     items(desafiosSemanales) { desafio ->
@@ -317,16 +312,12 @@ fun DesafiosScreenTab(
                         Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
-                // Mostrar encabezado y lista de desafíos diarios
                 if (desafiosDiarios.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Desafíos Diarios",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = Color(0xFF4CAF50),
-                                fontWeight = FontWeight.Bold
-                            ),
-                            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                            text = stringResource(R.string.titulo_desafios_diarios),
+                            style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF4CAF50)),
+                            modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
                     items(desafiosDiarios) { desafio ->
@@ -379,4 +370,4 @@ fun DesafiosScreenTab(
 @Composable
 fun DesafiosScreen() {
     DesafiosScreenTab()
-} 
+}

@@ -205,10 +205,31 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
         pdfFile.value = null
         viewModelScope.launch {
             try {
-                Log.d("RegistroConsumoVM", "Iniciando exportación de PDF...")
-                // TODO: Implementar exportación de PDF cuando esté disponible en el UnifiedApiService
-                exportError.value = "Funcionalidad de exportación temporalmente deshabilitada"
-                Log.e("RegistroConsumoVM", "Exportación de PDF no implementada en UnifiedApiService")
+                val idUsuario = getUserId()
+                Log.d("RegistroConsumoVM", "Iniciando exportación de PDF para usuario $idUsuario...")
+                val response = service.exportarPDF(idUsuario)
+                Log.d("RegistroConsumoVM", "Respuesta recibida: ${response.code()}")
+                if (response.isSuccessful && response.body()?.success == true) {
+                    val pdfData = response.body()?.data
+                    if (pdfData != null) {
+                        Log.d("RegistroConsumoVM", "Datos PDF recibidos, guardando archivo...")
+                        val file = com.example.proyecto_droid.util.FileUtils.savePdfToDevice(context, pdfData.content, pdfData.filename)
+                        if (file != null) {
+                            pdfFile.value = file
+                            Log.d("RegistroConsumoVM", "PDF guardado exitosamente: ${file.absolutePath}")
+                        } else {
+                            Log.e("RegistroConsumoVM", "Error al guardar PDF en dispositivo")
+                            exportError.value = "Error al guardar el PDF en el dispositivo"
+                        }
+                    } else {
+                        Log.e("RegistroConsumoVM", "No se recibieron datos del PDF")
+                        exportError.value = "No se recibieron datos del PDF"
+                    }
+                } else {
+                    val errorMsg = response.body()?.message ?: "Error al generar PDF"
+                    Log.e("RegistroConsumoVM", "Error en respuesta: $errorMsg")
+                    exportError.value = errorMsg
+                }
             } catch (e: Exception) {
                 Log.e("RegistroConsumoVM", "Excepción durante exportación: ${e.localizedMessage}")
                 exportError.value = "Error: ${e.localizedMessage}"
