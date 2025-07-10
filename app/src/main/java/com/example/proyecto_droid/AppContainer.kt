@@ -5,7 +5,6 @@ import com.example.proyecto_droid.data.model.AppContainer
 import com.example.proyecto_droid.data.model.AppDataContainer
 
 class Proyecto_droid : Application() {
-
     /**
      * AppContainer instance used by the rest of classes to obtain dependencies
      */

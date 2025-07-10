@@ -1,6 +1,7 @@
 package com.example.proyecto_droid.ui
 
 
+import AuthViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.proyecto_droid.Proyecto_droid
@@ -12,20 +13,36 @@ import com.example.proyecto_droid.ui.screens.categorias.CategoriaViewModel
 object AppViewModelProvider {
     lateinit var appContainer: AppContainer
 
-    val Factory = object : ViewModelProvider.Factory {
+    val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            require(::appContainer.isInitialized) {
+                "AppContainer must be initialized in MainActivity"
+            }
+
             return when {
-                modelClass.isAssignableFrom(CategoriaViewModel::class.java) -> {
-                    CategoriaViewModel(appContainer.categoriaRepository) as T
-                }
-                modelClass.isAssignableFrom(LocalLugarViewModel::class.java) -> {
-                    LocalLugarViewModel(appContainer.lugarRepository) as T
-                }
-                modelClass.isAssignableFrom(LocalPlatoVeiwModel::class.java) -> {
-                    LocalPlatoVeiwModel(appContainer.platoRepository) as T
-                }
-                else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+                // ViewModels existentes
+                modelClass.isAssignableFrom(LocalPlatoVeiwModel::class.java) -> LocalPlatoVeiwModel(
+                    appContainer.platoRepository,
+                    appContainer.lugarRepository,
+                    appContainer.categoriaRepository
+                ) as T
+
+                modelClass.isAssignableFrom(CategoriaViewModel::class.java) -> CategoriaViewModel(
+                    appContainer.categoriaRepository
+                ) as T
+
+                modelClass.isAssignableFrom(LocalLugarViewModel::class.java) -> LocalLugarViewModel(
+                    appContainer.lugarRepository
+                ) as T
+
+                // ViewModel temporal para Auth
+                modelClass.isAssignableFrom(AuthViewModel::class.java) -> AuthViewModel() as T
+
+                else -> throw IllegalArgumentException(
+                    "Unknown ViewModel class: ${modelClass.name}\n" +
+                            "Registered ViewModels: [LocalPlatoViewModel, CategoriaViewModel, LocalLugarViewModel, AuthViewModel]"
+                )
             }
         }
     }

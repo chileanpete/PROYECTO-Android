@@ -7,7 +7,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.proyecto_droid.ui.screens.auth.LoginScreen
+//import com.example.proyecto_droid.ui.screens.auth.LoginScreen
 import com.example.proyecto_droid.ui.screens.categorias.AddCategoriaScreen
 import com.example.proyecto_droid.ui.screens.categorias.CategoriaScreen
 import com.example.proyecto_droid.ui.screens.platos.LocalAddPlatoScreen
@@ -37,8 +37,8 @@ import kotlinx.serialization.Serializable
 
 object Routes {
     // Autenticación
-    const val AUTH_MANAGER = "auth_manager"
-    const val LOGIN = "login"
+//    const val AUTH_MANAGER = "auth_manager"
+//    const val LOGIN = "login"
 
     // Pantalla principal
     const val MAIN = "main"
@@ -55,36 +55,17 @@ object Routes {
     const val CATEGORIAS = "categorias"
     const val ADD_CATEGORIA = "add_categoria"
 }
-
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
 
     NavHost(
         navController = navController,
-        startDestination = Routes.AUTH_MANAGER
+        startDestination = Routes.MAIN  // Establece MAIN como pantalla inicial
     ) {
-        // Pantallas de Autenticación
-        composable(Routes.AUTH_MANAGER) {
-            AuthManager(
-                navController = navController,
-                viewModel = viewModel(factory = AppViewModelProvider.Factory)
-            )
-        }
-
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                navController = navController,
-                viewModel = viewModel(factory = AppViewModelProvider.Factory)
-            )
-        }
-
         // Pantalla Principal
         composable(Routes.MAIN) {
-            MainScreen(
-                navController = navController
-                // Si necesitas ViewModel aquí, debes crearlo primero
-            )
+            MainScreen(navController = navController)
         }
 
         // Pantallas de Platos

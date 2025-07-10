@@ -27,14 +27,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Configuración de inyección de dependencias
+        // Inicializa el ViewModelProvider con el contenedor
         AppViewModelProvider.appContainer = (application as Proyecto_droid).container
 
         setContent {
             Proyecto_droidTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
-                    AppNavigation()
-                }
+                AppNavigation()
             }
         }
     }

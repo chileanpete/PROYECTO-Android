@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.devtools.ksp") version "1.9.20-1.0.14" // Añade KSP
 }
 
 android {
@@ -76,6 +77,11 @@ dependencies {
 
     // Room
     implementation("androidx.room:room-runtime:$roomVersion")
-    //ksp("androidx.room:room-compiler:$roomVersion") estaba en rojo :c
+    ksp("androidx.room:room-compiler:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
+}
+kotlin {
+    sourceSets.configureEach {
+        kotlin.srcDir("$buildDir/generated/ksp/$name/kotlin/")
+    }
 }
