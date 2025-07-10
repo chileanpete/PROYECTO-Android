@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.proyecto_droid.data.local.DesafioPreferences
@@ -256,40 +257,64 @@ fun DesafiosScreenTab(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-            .padding(horizontal = 16.dp, vertical = 24.dp)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
-        Text(
-            text = "Desafíos sugeridos",
-            style = MaterialTheme.typography.headlineMedium.copy(
-                color = Color(0xFF4CAF50)
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        )
-
         if (isLoading) {
-            CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(100.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color(0xFF4CAF50))
+            }
         } else if (errorMsg != null) {
-            Text(
-                text = errorMsg ?: "",
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.elevatedCardColors(
+                    containerColor = MaterialTheme.colorScheme.errorContainer
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Error al cargar desafíos",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = errorMsg ?: "Error desconocido",
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    )
+                }
+            }
         } else {
-            LazyColumn(modifier = Modifier.weight(1f)) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
                 // Mostrar encabezado y lista de desafíos semanales
                 if (desafiosSemanales.isNotEmpty()) {
                     item {
                         Text(
                             text = "Desafíos Semanales",
-                            style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF4CAF50)),
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(top = 8.dp, bottom = 8.dp)
                         )
                     }
                     items(desafiosSemanales) { desafio ->
                         DesafioCard(desafio)
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
                 // Mostrar encabezado y lista de desafíos diarios
@@ -297,22 +322,54 @@ fun DesafiosScreenTab(
                     item {
                         Text(
                             text = "Desafíos Diarios",
-                            style = MaterialTheme.typography.titleLarge.copy(color = Color(0xFF4CAF50)),
-                            modifier = Modifier.padding(vertical = 8.dp)
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = Color(0xFF4CAF50),
+                                fontWeight = FontWeight.Bold
+                            ),
+                            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
                         )
                     }
                     items(desafiosDiarios) { desafio ->
                         DesafioCard(desafio)
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
                 if (desafiosSemanales.isEmpty() && desafiosDiarios.isEmpty()) {
                     item {
-                        Text(
-                            text = "No hay desafíos para los objetivos seleccionados.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        ElevatedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.elevatedCardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = "No hay desafíos disponibles",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Medium,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Selecciona tus objetivos para recibir desafíos personalizados",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    )
+                                )
+                            }
+                        }
                     }
+                }
+                
+                // Espaciado adicional al final
+                item {
+                    Spacer(modifier = Modifier.height(100.dp))
                 }
             }
         }

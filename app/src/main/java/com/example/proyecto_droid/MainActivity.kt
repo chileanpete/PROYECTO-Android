@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +39,7 @@ import com.example.proyecto_droid.ui.screens.EditPreferencesScreen
 import com.example.proyecto_droid.ui.screens.ChangePasswordScreen
 import com.example.proyecto_droid.ui.viewmodel.SessionViewModel
 import com.example.proyecto_droid.ui.viewmodel.SessionEvent
+import com.example.proyecto_droid.ui.viewmodel.TallerViewModel
 import com.example.proyecto_droid.ui.theme.BackgroundLight
 import com.example.proyecto_droid.ui.theme.GreenPrimary
 import com.example.proyecto_droid.ui.theme.LightGrayText
@@ -211,9 +213,12 @@ fun MainScaffold(sessionViewModel: SessionViewModel) {
             startDestination = "home",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("home") { HomeScreen(navController, sessionViewModel) }
+            composable("home") { 
+                val tallerViewModel: TallerViewModel = viewModel()
+                HomeScreen(navController, sessionViewModel, tallerViewModel) 
+            }
             composable("nutrition") { NutritionScreen() }
-            composable("exercise") { ExerciseScreen() }
+            composable("exercise") { ExerciseScreen(navController, sessionViewModel) }
             composable("profile") { 
                 ProfileScreen(
                     onNavigateToEditProfile = { navController.navigate("edit_profile") },

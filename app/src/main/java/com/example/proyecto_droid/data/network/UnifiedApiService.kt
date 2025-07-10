@@ -192,6 +192,44 @@ interface UnifiedApiService {
     @GET("desafios/estadisticas")
     suspend fun getEstadisticasDesafios(): UnifiedApiResponse<Map<String, Any>>
     
+    // ===== TALLERES RECREATIVOS =====
+    
+    @GET("talleres")
+    suspend fun getTalleres(@Query("page") page: Int? = null): UnifiedApiResponse<PaginatedResponse<TallerRecreativo>>
+    
+    @GET("talleres/{id}")
+    suspend fun getTaller(@Path("id") id: Int): UnifiedApiResponse<TallerRecreativo>
+    
+    @POST("talleres")
+    suspend fun createTaller(@Body taller: TallerRecreativo): UnifiedApiResponse<TallerRecreativo>
+    
+    @PUT("talleres/{id}")
+    suspend fun updateTaller(@Path("id") id: Int, @Body taller: TallerRecreativo): UnifiedApiResponse<TallerRecreativo>
+    
+    @DELETE("talleres/{id}")
+    suspend fun deleteTaller(@Path("id") id: Int): UnifiedApiResponse<Unit>
+    
+    @GET("talleres-activos-temp")
+    suspend fun getTalleresActivos(): UnifiedApiResponse<List<TallerRecreativo>>
+    
+    @GET("talleres/tipo/{tipo}")
+    suspend fun getTalleresByType(@Path("tipo") tipo: String): UnifiedApiResponse<List<TallerRecreativo>>
+    
+    @GET("talleres/instructor/{instructor}")
+    suspend fun getTalleresByInstructor(@Path("instructor") instructor: String): UnifiedApiResponse<List<TallerRecreativo>>
+    
+    @GET("talleres/con-cupos")
+    suspend fun getTalleresConCupos(): UnifiedApiResponse<List<TallerRecreativo>>
+    
+    @GET("talleres/gratuitos")
+    suspend fun getTalleresGratuitos(): UnifiedApiResponse<List<TallerRecreativo>>
+    
+    @GET("talleres/usuario/{idUsuario}")
+    suspend fun getTalleresByUser(@Path("idUsuario") userId: Int): UnifiedApiResponse<List<TallerRecreativo>>
+    
+    @GET("talleres/estadisticas")
+    suspend fun getEstadisticasTalleres(): UnifiedApiResponse<Map<String, Any>>
+    
     // ===== MENÚS DIARIOS =====
     
     @GET("menus-diarios/usuario/{idUsuario}")
