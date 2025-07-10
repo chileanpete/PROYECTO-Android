@@ -1,6 +1,7 @@
 package com.example.proyecto_droid.ui
 
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -39,58 +40,24 @@ object Routes {
     const val AUTH_MANAGER = "auth_manager"
     const val LOGIN = "login"
 
-    // Flujo principal
+    // Pantalla principal
     const val MAIN = "main"
-    const val CATEGORIA = "categoria/{categoriaId}"
-    const val CONTENIDO = "contenido/{categoriaId}"
-    const val AGREGAR_CATEGORIA = "agregar_categoria"
-    const val AGREGAR_CONTENIDO = "agregar_contenido/{categoriaId}"
 
-    // Platos
+    // Gestión de Platos
     const val PLATOS = "platos"
     const val ADD_PLATO = "add_plato"
 
-    // Lugares
+    // Gestión de Lugares
     const val LUGARES = "lugares"
     const val ADD_LUGAR = "add_lugar"
-}
 
-fun NavGraphBuilder.mainNavigation(navController: NavHostController) {
-    composable(Routes.MAIN) { MainScreen(navController) }
-    composable(Routes.CATEGORIA) { backStackEntry ->
-        val categoriaId = backStackEntry.arguments?.getString("categoriaId")?.toIntOrNull() ?: 0
-        CategoriaScreen(categoriaId, navController)
-    }
-//    composable(Routes.CONTENIDO) { backStackEntry ->
-//        val categoriaId = backStackEntry.arguments?.getString("categoriaId")?.toIntOrNull() ?: 0
-//        ContenidoScreen(categoriaId, navController)
-//    }
-    composable(Routes.AGREGAR_CATEGORIA) {
-        AddCategoriaScreen(navController)
-    }
-//    composable(Routes.AGREGAR_CONTENIDO) { backStackEntry ->
-//        val categoriaId = backStackEntry.arguments?.getString("categoriaId")?.toIntOrNull() ?: 0
-//        AddContenidoScreen(navController, categoriaId)
-//    }
-}
-
-fun NavGraphBuilder.authNavigation(navController: NavHostController) {
-    composable(Routes.AUTH_MANAGER) { AuthManager(navController) }
-    composable(Routes.LOGIN) { LoginScreen(navController) }
-}
-
-fun NavGraphBuilder.platosNavigation(navController: NavHostController) {
-    composable(Routes.PLATOS) { LocalPlatoScreen(navController) }
-    composable(Routes.ADD_PLATO) { LocalAddPlatoScreen(navController) }
-}
-
-fun NavGraphBuilder.lugaresNavigation(navController: NavHostController) {
-    composable(Routes.LUGARES) { LocalLugarScreen(navController) }
-    composable(Routes.ADD_LUGAR) { LocalAddLugarScreen(navController) }
+    // Gestión de Categorías
+    const val CATEGORIAS = "categorias"
+    const val ADD_CATEGORIA = "add_categoria"
 }
 
 @Composable
-fun Navigation(){
+fun AppNavigation() {
     val navController = rememberNavController()
 
     NavHost(
@@ -99,32 +66,73 @@ fun Navigation(){
     ) {
         // Pantallas de Autenticación
         composable(Routes.AUTH_MANAGER) {
-            AuthManager(navController = navController)
+            AuthManager(
+                navController = navController,
+                viewModel = viewModel(factory = AppViewModelProvider.Factory)
+            )
         }
 
         composable(Routes.LOGIN) {
-            LoginScreen(navController = navController)
+            LoginScreen(
+                navController = navController,
+                viewModel = viewModel(factory = AppViewModelProvider.Factory)
+            )
+        }
+
+        // Pantalla Principal
+        composable(Routes.MAIN) {
+            MainScreen(
+                navController = navController
+                // Si necesitas ViewModel aquí, debes crearlo primero
+            )
         }
 
         // Pantallas de Platos
         composable(Routes.PLATOS) {
-            PlatosScreen(navController = navController)
+            LocalPlatoScreen(
+                navController = navController,
+                viewModel = viewModel(factory = AppViewModelProvider.Factory)
+            )
         }
 
         composable(Routes.ADD_PLATO) {
-            AddPlatoScreen(navController = navController)
+            LocalAddPlatoScreen(
+                navController = navController,
+                viewModel = viewModel(factory = AppViewModelProvider.Factory)
+            )
         }
 
         // Pantallas de Lugares
         composable(Routes.LUGARES) {
-            LugaresScreen(navController = navController)
+            LocalLugarScreen(
+                navController = navController,
+                viewModel = viewModel(factory = AppViewModelProvider.Factory)
+            )
         }
 
         composable(Routes.ADD_LUGAR) {
-            AddLugarScreen(navController = navController)
+            LocalAddLugarScreen(
+                navController = navController,
+                viewModel = viewModel(factory = AppViewModelProvider.Factory)
+            )
+        }
+
+        // Pantallas de Categorías
+        composable(Routes.CATEGORIAS) {
+            CategoriaScreen(
+                navController = navController,
+                viewModel = viewModel(factory = AppViewModelProvider.Factory)
+            )
+        }
+
+        composable(Routes.ADD_CATEGORIA) {
+            AddCategoriaScreen(
+                navController = navController,
+                viewModel = viewModel(factory = AppViewModelProvider.Factory)
+            )
         }
     }
-
+}
 //    NavHost(navController = navController,startDestination = AuthManager) {
 //        composable<AuthManager> {
 //            AuthManager(navController = navController)
@@ -145,4 +153,3 @@ fun Navigation(){
 //            AddPlatoScreen(navController = navController)
 //        }
 //    }
-}

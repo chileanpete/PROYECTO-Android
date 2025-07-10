@@ -9,9 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import com.example.proyecto_droid.ui.Routes
 
 @Composable
-fun MainScreen(navController: NavHostController) {
+fun MainScreen(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -20,31 +21,28 @@ fun MainScreen(navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Button(
-            onClick = { navController.navigate("categoria/1") },
+            onClick = { navController.navigate(Routes.PLATOS) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Películas")
+            Text("Gestión de Platos")
         }
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(
-            onClick = { navController.navigate("categoria/2") },
+            onClick = { navController.navigate(Routes.LUGARES) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Series")
+            Text("Gestión de Lugares")
         }
-        Spacer(modifier = Modifier.height(8.dp))
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(
-            onClick = { navController.navigate("categoria/3") },
+            onClick = { navController.navigate(Routes.CATEGORIAS) },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Anime")
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Button(
-            onClick = { navController.navigate("agregarcategoria") },
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Agregar Categoría")
+            Text("Gestión de Categorías")
         }
     }
 }
