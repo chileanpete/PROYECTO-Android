@@ -87,7 +87,7 @@ data class CategoriaComida(
  * Modelo para Lugar de Comida
  */
 data class LugarComida(
-    @SerializedName("id")
+    @SerializedName("id_lugar")
     val id: Int = 0,
     
     @SerializedName("nombre")
@@ -139,4 +139,128 @@ data class TipoEjercicio(
     
     @SerializedName("activo")
     val activo: Boolean = true
-) 
+)
+
+/**
+ * Modelo para Menú Favorito del Usuario
+ */
+data class MenuFavoritoUsuario(
+    @SerializedName("id_menu_favorito")
+    val id: Int = 0,
+    
+    @SerializedName("id_usuario")
+    val idUsuario: Int,
+    
+    @SerializedName("nombre_menu")
+    val nombreMenu: String,
+    
+    @SerializedName("descripcion")
+    val descripcion: String? = null,
+    
+    @SerializedName("tipo_comida")
+    val tipoComida: String? = null, // desayuno, almuerzo, cena, snack
+    
+    @SerializedName("calorias_totales")
+    val caloriasTotales: Double? = null,
+    
+    @SerializedName("activo")
+    val activo: Boolean = true,
+    
+    @SerializedName("veces_usado")
+    val vecesUsado: Int = 0,
+    
+    @SerializedName("fecha_ultimo_uso")
+    val fechaUltimoUso: String? = null,
+    
+    @SerializedName("created_at")
+    val fechaCreacion: String? = null,
+    
+    @SerializedName("platos")
+    val platos: List<MenuFavoritoPlato> = emptyList()
+)
+
+/**
+ * Modelo para Plato dentro de un Menú Favorito
+ */
+data class MenuFavoritoPlato(
+    @SerializedName("id_menu_plato")
+    val id: Int = 0,
+    
+    @SerializedName("id_menu_favorito")
+    val idMenuFavorito: Int,
+    
+    @SerializedName("id_plato")
+    val idPlato: Int,
+    
+    @SerializedName("cantidad")
+    val cantidad: Double = 1.0,
+    
+    @SerializedName("unidad")
+    val unidad: String = "porcion",
+    
+    @SerializedName("calorias_porcion")
+    val caloriasPorcion: Double? = null,
+    
+    @SerializedName("notas")
+    val notas: String? = null,
+    
+    @SerializedName("orden")
+    val orden: Int = 1,
+    
+    @SerializedName("plato")
+    val plato: Plato? = null
+)
+
+/**
+ * Request para crear un menú favorito
+ */
+data class CreateMenuFavoritoRequest(
+    @SerializedName("id_usuario")
+    val idUsuario: Int,
+    
+    @SerializedName("nombre_menu")
+    val nombreMenu: String,
+    
+    @SerializedName("descripcion")
+    val descripcion: String? = null,
+    
+    @SerializedName("tipo_comida")
+    val tipoComida: String? = null,
+    
+    @SerializedName("platos")
+    val platos: List<PlatoMenuFavoritoRequest>
+)
+
+/**
+ * Datos de plato para crear menú favorito
+ */
+data class PlatoMenuFavoritoRequest(
+    @SerializedName("id_plato")
+    val idPlato: Int,
+    
+    @SerializedName("cantidad")
+    val cantidad: Double = 1.0,
+    
+    @SerializedName("unidad")
+    val unidad: String = "porcion",
+    
+    @SerializedName("notas")
+    val notas: String? = null
+)
+
+/**
+ * Request para agregar un plato a un menú favorito existente
+ */
+data class AgregarPlatoMenuRequest(
+    @SerializedName("id_plato")
+    val idPlato: Int,
+    
+    @SerializedName("cantidad")
+    val cantidad: Double = 1.0,
+    
+    @SerializedName("unidad")
+    val unidad: String = "porcion",
+    
+    @SerializedName("notas")
+    val notas: String? = null
+)

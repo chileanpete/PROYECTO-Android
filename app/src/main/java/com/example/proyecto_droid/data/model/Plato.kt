@@ -6,11 +6,8 @@ import com.google.gson.annotations.SerializedName
  * Modelo para Plato de comida
  */
 data class Plato(
-    @SerializedName("id")
-    val id: Int = 0,
-    
     @SerializedName("id_plato")
-    val idPlato: Int? = null,
+    val id: Int = 0,
     
     @SerializedName("nombre")
     val nombre: String,

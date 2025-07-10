@@ -27,6 +27,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
 import com.example.proyecto_droid.R
 import com.example.proyecto_droid.ui.screens.LoginScreen
 import com.example.proyecto_droid.ui.screens.RegisterScreen
@@ -37,14 +39,20 @@ import com.example.proyecto_droid.ui.screens.ProfileScreen
 import com.example.proyecto_droid.ui.screens.EditProfileScreen
 import com.example.proyecto_droid.ui.screens.EditPreferencesScreen
 import com.example.proyecto_droid.ui.screens.ChangePasswordScreen
+import com.example.proyecto_droid.ui.screens.LocalDetailScreen
 import com.example.proyecto_droid.ui.viewmodel.SessionViewModel
 import com.example.proyecto_droid.ui.viewmodel.SessionEvent
 import com.example.proyecto_droid.ui.viewmodel.TallerViewModel
+import com.example.proyecto_droid.ui.viewmodel.LugaresViewModel
+import com.example.proyecto_droid.ui.viewmodel.LugaresViewModelFactory
+import com.example.proyecto_droid.ui.viewmodel.LugaresUiState
 import com.example.proyecto_droid.ui.theme.BackgroundLight
 import com.example.proyecto_droid.ui.theme.GreenPrimary
 import com.example.proyecto_droid.ui.theme.LightGrayText
 import com.example.proyecto_droid.ui.theme.Proyecto_droidTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -217,7 +225,7 @@ fun MainScaffold(sessionViewModel: SessionViewModel) {
                 val tallerViewModel: TallerViewModel = viewModel()
                 HomeScreen(navController, sessionViewModel, tallerViewModel) 
             }
-            composable("nutrition") { NutritionScreen() }
+            composable("nutrition") { NutritionScreen(navController, sessionViewModel) }
             composable("exercise") { ExerciseScreen(navController, sessionViewModel) }
             composable("profile") { 
                 ProfileScreen(
@@ -247,6 +255,44 @@ fun MainScaffold(sessionViewModel: SessionViewModel) {
                     onBackClick = { navController.popBackStack() },
                     onSaveClick = { navController.popBackStack() }
                 )
+            }
+            composable(
+                "local_detail/{lugarId}",
+                arguments = listOf(navArgument("lugarId") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val lugarId = backStackEntry.arguments?.getInt("lugarId") ?: 0
+                // Necesitamos obtener el lugar de alguna manera
+                // Por simplicidad, creamos un lugar temporal o lo obtenemos del ViewModel
+                val lugaresViewModel: LugaresViewModel = viewModel(
+                    factory = LugaresViewModelFactory(LocalContext.current)
+                )
+                val lugaresState by lugaresViewModel.uiState.collectAsStateWithLifecycle()
+                
+                when (val state = lugaresState) {
+                    is LugaresUiState.Success -> {
+                        val lugar = state.lugares.find { it.id == lugarId }
+                        lugar?.let {
+                            LocalDetailScreen(
+                                navController = navController,
+                                lugar = it
+                            )
+                        } ?: run {
+                            // Si no se encuentra el lugar, navegar de vuelta
+                            LaunchedEffect(Unit) {
+                                navController.popBackStack()
+                            }
+                        }
+                    }
+                    else -> {
+                        // Mostrar loading o error mientras se cargan los lugares
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = GreenPrimary)
+                        }
+                    }
+                }
             }
         }
     }

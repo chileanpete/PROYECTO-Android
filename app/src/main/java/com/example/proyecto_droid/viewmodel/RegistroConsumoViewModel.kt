@@ -251,7 +251,7 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
             try {
                 val nuevoConsumo = RegistroConsumo(
                     idUsuario = getUserId(),
-                    idPlato = plato.idPlato ?: plato.id,
+                    idPlato = plato.id,
                     fechaConsumo = fecha,
                     horaConsumo = hora,
                     porciones = porciones,

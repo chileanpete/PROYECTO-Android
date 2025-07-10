@@ -11,7 +11,7 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 /**
- * Módulo de Hilt para inyección de dependencias de repositorios
+ * Módulo de Hilt para inyección de dependencias de repositorios y servicios de red
  */
 @Module
 @InstallIn(SingletonComponent::class)
@@ -24,4 +24,6 @@ object RepositoryModule {
     ): UserRepository {
         return UserRepositoryImpl(context)
     }
+
+
 } 

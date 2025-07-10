@@ -71,7 +71,7 @@ interface UnifiedApiService {
     suspend fun getPlatosByCategory(@Path("idCategoria") categoryId: Int): UnifiedApiResponse<List<Plato>>
     
     @GET("platos/lugar/{idLugar}")
-    suspend fun getPlatosByPlace(@Path("idLugar") placeId: Int): UnifiedApiResponse<List<Plato>>
+    suspend fun getPlatosByPlace(@Path("idLugar") placeId: Int): UnifiedApiResponse<PaginatedResponse<Plato>>
     
     // ===== ACTIVIDAD FÍSICA =====
     
@@ -159,6 +159,32 @@ interface UnifiedApiService {
         @Path("idUsuario") userId: Int,
         @Path("idPlato") platoId: Int
     ): UnifiedApiResponse<Boolean>
+    
+    // ===== MENÚS FAVORITOS DEL USUARIO =====
+    
+    @GET("menus-favoritos/usuario/{idUsuario}")
+    suspend fun getMenusFavoritosByUser(@Path("idUsuario") userId: Int): UnifiedApiResponse<List<MenuFavoritoUsuario>>
+    
+    @POST("menus-favoritos")
+    suspend fun createMenuFavorito(@Body request: CreateMenuFavoritoRequest): UnifiedApiResponse<MenuFavoritoUsuario>
+    
+    @POST("menus-favoritos/{idMenuFavorito}/platos")
+    suspend fun agregarPlatoAMenuFavorito(
+        @Path("idMenuFavorito") menuId: Int,
+        @Body request: AgregarPlatoMenuRequest
+    ): UnifiedApiResponse<MenuFavoritoPlato>
+    
+    @DELETE("menus-favoritos/{idMenuFavorito}/platos/{idPlato}")
+    suspend fun eliminarPlatoDeMenuFavorito(
+        @Path("idMenuFavorito") menuId: Int,
+        @Path("idPlato") platoId: Int
+    ): UnifiedApiResponse<Unit>
+    
+    @DELETE("menus-favoritos/{idMenuFavorito}")
+    suspend fun deleteMenuFavorito(@Path("idMenuFavorito") menuId: Int): UnifiedApiResponse<Unit>
+    
+    @PATCH("menus-favoritos/{idMenuFavorito}/usar")
+    suspend fun usarMenuFavorito(@Path("idMenuFavorito") menuId: Int): UnifiedApiResponse<MenuFavoritoUsuario>
     
     // ===== DESAFÍOS =====
     
