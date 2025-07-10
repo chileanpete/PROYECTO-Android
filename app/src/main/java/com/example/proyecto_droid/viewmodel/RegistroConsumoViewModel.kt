@@ -207,32 +207,66 @@ class RegistroConsumoViewModel(application: Application) : AndroidViewModel(appl
             try {
                 val idUsuario = getUserId()
                 Log.d("RegistroConsumoVM", "Iniciando exportación de PDF para usuario $idUsuario...")
-                val response = service.exportarPDF(idUsuario)
-                Log.d("RegistroConsumoVM", "Respuesta recibida: ${response.code()}")
-                if (response.isSuccessful && response.body()?.success == true) {
-                    val pdfData = response.body()?.data
-                    if (pdfData != null) {
-                        Log.d("RegistroConsumoVM", "Datos PDF recibidos, guardando archivo...")
-                        val file = com.example.proyecto_droid.util.FileUtils.savePdfToDevice(context, pdfData.content, pdfData.filename)
-                        if (file != null) {
-                            pdfFile.value = file
-                            Log.d("RegistroConsumoVM", "PDF guardado exitosamente: ${file.absolutePath}")
-                        } else {
-                            Log.e("RegistroConsumoVM", "Error al guardar PDF en dispositivo")
-                            exportError.value = "Error al guardar el PDF en el dispositivo"
+                val response = service.exportarPDFConsumos(idUsuario)
+                Log.d("RegistroConsumoVM", "Respuesta recibida: ${response.success}")
+                
+                if (response.isSuccessful() && response.data != null) {
+                    val pdfData = response.data
+                    Log.d("RegistroConsumoVM", "Datos PDF recibidos: ${pdfData.filename}")
+                    
+                    // ExportResponse contiene filename y downloadUrl, no content
+                    Log.d("RegistroConsumoVM", "PDF disponible para descarga: ${pdfData.filename}")
+                    Log.d("RegistroConsumoVM", "URL de descarga: ${pdfData.downloadUrl}")
+                    
+                    // Descargar PDF automáticamente al dispositivo
+                    if (!pdfData.downloadUrl.isNullOrEmpty()) {
+                        try {
+                            Log.d("RegistroConsumoVM", "Descargando PDF desde: ${pdfData.downloadUrl}")
+                            
+                            val file = com.example.proyecto_droid.util.FileUtils.downloadPdfFromUrl(
+                                context, 
+                                pdfData.downloadUrl, 
+                                pdfData.filename
+                            )
+                            
+                            if (file != null && file.exists()) {
+                                pdfFile.value = file
+                                Log.d("RegistroConsumoVM", "PDF descargado exitosamente en: ${file.absolutePath}")
+                                android.widget.Toast.makeText(context, 
+                                    "PDF descargado en: Downloads/ProyectoDroid/${pdfData.filename}", 
+                                    android.widget.Toast.LENGTH_LONG).show()
+                                
+                                // Intentar abrir el PDF automáticamente
+                                try {
+                                    com.example.proyecto_droid.util.FileUtils.openPdf(context, file)
+                                } catch (e: Exception) {
+                                    Log.w("RegistroConsumoVM", "No se pudo abrir el PDF automáticamente: ${e.message}")
+                                }
+                            } else {
+                                exportError.value = "Error al descargar el PDF del servidor"
+                                android.widget.Toast.makeText(context, "Error al descargar PDF", android.widget.Toast.LENGTH_LONG).show()
+                            }
+                        } catch (e: Exception) {
+                            Log.e("RegistroConsumoVM", "Error durante descarga: ${e.message}", e)
+                            exportError.value = "Error al descargar PDF: ${e.message}"
+                            android.widget.Toast.makeText(context, "Error al descargar PDF", android.widget.Toast.LENGTH_LONG).show()
                         }
                     } else {
-                        Log.e("RegistroConsumoVM", "No se recibieron datos del PDF")
-                        exportError.value = "No se recibieron datos del PDF"
+                        exportError.value = "URL de descarga no disponible"
+                        android.widget.Toast.makeText(context, "Error: URL de descarga no disponible", android.widget.Toast.LENGTH_LONG).show()
                     }
+                    
+                    exportError.value = null
                 } else {
-                    val errorMsg = response.body()?.message ?: "Error al generar PDF"
+                    val errorMsg = response.getErrorMessage()
                     Log.e("RegistroConsumoVM", "Error en respuesta: $errorMsg")
                     exportError.value = errorMsg
+                    android.widget.Toast.makeText(context, errorMsg, android.widget.Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
                 Log.e("RegistroConsumoVM", "Excepción durante exportación: ${e.localizedMessage}")
                 exportError.value = "Error: ${e.localizedMessage}"
+                android.widget.Toast.makeText(context, "Error inesperado al exportar PDF", android.widget.Toast.LENGTH_LONG).show()
             } finally {
                 isExporting.value = false
             }

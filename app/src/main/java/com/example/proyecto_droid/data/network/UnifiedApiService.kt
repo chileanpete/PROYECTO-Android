@@ -143,6 +143,9 @@ interface UnifiedApiService {
         @Query("fecha") fecha: String
     ): UnifiedApiResponse<List<RegistroConsumo>>
     
+    @GET("consumos/exportar-pdf")
+    suspend fun exportarPDFConsumos(@Query("id_usuario") userId: Int): UnifiedApiResponse<ExportResponse>
+    
     // ===== FAVORITOS =====
     
     @GET("favoritos/usuario/{idUsuario}")
