@@ -10,25 +10,37 @@ import com.example.proyecto_droid.ui.screens.lugares.LocalLugarViewModel
 import com.example.proyecto_droid.ui.screens.categorias.CategoriaViewModel
 
 object AppViewModelProvider {
+    // Asegúrate que esto se inicialice en MainActivity
     lateinit var appContainer: AppContainer
 
-    val Factory = object : ViewModelProvider.Factory {
+    val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (!::appContainer.isInitialized) {
+                throw IllegalStateException("AppContainer must be initialized in MainActivity")
+            }
+
             return when {
+                modelClass.isAssignableFrom(LocalPlatoVeiwModel::class.java) -> {
+                    LocalPlatoVeiwModel(
+                        platoRepository = appContainer.platoRepository,
+                        lugarRepository = appContainer.lugarRepository,
+                        categoriaRepository = appContainer.categoriaRepository
+                    ) as T
+                }
+                // ... otros ViewModels
                 modelClass.isAssignableFrom(CategoriaViewModel::class.java) -> {
                     CategoriaViewModel(appContainer.categoriaRepository) as T
                 }
+
                 modelClass.isAssignableFrom(LocalLugarViewModel::class.java) -> {
                     LocalLugarViewModel(appContainer.lugarRepository) as T
                 }
-                modelClass.isAssignableFrom(LocalPlatoVeiwModel::class.java) -> {
-                    LocalPlatoVeiwModel(appContainer.platoRepository) as T
-                }
-                else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+
+                else -> throw IllegalArgumentException("Unknown ViewModel class")
             }
         }
-    }
+        }
 }
 //import androidx.lifecycle.ViewModelProvider
 //import androidx.lifecycle.viewmodel.CreationExtras
